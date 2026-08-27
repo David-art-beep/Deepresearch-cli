@@ -5,17 +5,18 @@ description: 为 Hermes、Codex 或 Claude Code ACP 安装、升级或修复 Dee
 
 # DeepResearch 安装器
 
-在本机准备可用的 `deepresearch` 命令及其可选的 Camofox 代码级回退能力，并验证用户选择的 Hermes、Codex 或 Claude Code ACP Harness。Python CLI 与平台相关的浏览器运行时应分开安装：先从用户提供的来源安装 CLI，再由 CLI 把 Camofox 安装到自己的私有目录。
+在本机准备可用的 `deepresearch` 命令及其可选的 Camofox 代码级回退能力，并验证用户选择的 Hermes、Codex 或 Claude Code ACP Harness。CLI 的默认上游仓库是 `https://github.com/David-art-beep/Deepresearch-cli`。Python CLI 与平台相关的浏览器运行时应分开安装：先安装 CLI，再由 CLI 把 Camofox 安装到自己的私有目录。
 
 ## 输入与授权
 
-修改机器前先确定 CLI 来源。可以使用以下任一种来源：
+修改机器前先确定 CLI 来源。用户没有指定其他来源时，使用默认上游仓库；用户明确提供来源时以用户选择为准。支持：
 
+- 默认上游仓库 `https://github.com/David-art-beep/Deepresearch-cli`；
 - 包含 `pyproject.toml` 的本地 DeepResearch 源码目录；
 - 本地 wheel 或源码分发包；
 - 用户明确提供的 Git 地址或包仓库地址。
 
-不得猜测仓库、分支、包索引、凭证或代理。如果没有可用的安装来源，向用户索取。
+不得猜测默认仓库中不存在的 Tag、Release、wheel 地址、分支、包索引、凭证或代理。只有经过只读检查确认 Release wheel 存在时才能优先使用它；否则使用默认 Git 仓库地址安装。默认仓库不可访问且用户未提供其他来源时，停止并报告访问失败。
 
 安装软件包和下载浏览器会修改用户环境并使用网络。可以先进行只读检查，但必须在执行这些修改前取得当前运行环境要求的授权。未经用户另行授权，不得安装或升级系统级 Python、Node.js、Hermes、Codex、Claude Code ACP Adapter、包管理器、Shell 或浏览器应用。
 
@@ -35,15 +36,22 @@ description: 为 Hermes、Codex 或 Claude Code ACP 安装、升级或修复 Dee
 
 ## 安装 CLI
 
-优先使用隔离的工具安装：
+优先使用隔离的工具安装。如果只读检查确认默认仓库存在可用的最新 Release wheel，使用该 wheel 的实际下载地址，不得自行拼接不存在的版本号或文件名：
+
+```bash
+uv tool install https://github.com/David-art-beep/Deepresearch-cli/releases/download/<已确认的-tag>/<已确认的-wheel文件名>
+```
+
+没有可用 Release wheel 时，直接从默认仓库安装：
+
+```bash
+uv tool install "git+https://github.com/David-art-beep/Deepresearch-cli.git"
+```
+
+用户提供本地 wheel、源码分发包或可信源码目录时，直接传入其绝对路径，例如：
 
 ```bash
 uv tool install /绝对路径/deepresearch_cli-0.1.0-py3-none-any.whl
-```
-
-对于可信的本地源码目录，改为传入其绝对路径：
-
-```bash
 uv tool install /绝对路径/deepresearch-source
 ```
 

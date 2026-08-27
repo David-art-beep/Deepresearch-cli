@@ -491,7 +491,8 @@ hermes skills publish ./skills/deepresearch-installer \
 发布后，用户可通过注册表标识或指向 `SKILL.md` 的 HTTPS 地址安装，再对 Agent 说：
 
 ```text
-使用 $deepresearch-installer，从这个 wheel/源码地址安装 DeepResearch CLI 和 Camofox，
+使用 $deepresearch-installer，从默认仓库 https://github.com/David-art-beep/Deepresearch-cli
+安装 DeepResearch CLI 和 Camofox，
 并验证 Hermes（也可以选择 Codex、Claude Code ACP，或同时验证多个 Harness）。
 ```
 
