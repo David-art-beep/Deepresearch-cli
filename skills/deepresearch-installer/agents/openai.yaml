@@ -1,0 +1,4 @@
+interface:
+  display_name: "DeepResearch 安装器"
+  short_description: "为 Hermes 或 Codex 安装 CLI 和 Camofox"
+  default_prompt: "使用 $deepresearch-installer 为 Hermes 或 Codex 安装并验证 DeepResearch CLI 和 Camofox。"

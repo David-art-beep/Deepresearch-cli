@@ -1,0 +1,13 @@
+version: 1
+name: normal
+steps:
+  - plan
+  - research
+  - report-writer
+  - render
+timeouts:
+  plan: 300
+  research: 720
+  report-writer: 420
+  md-html: 1200
+result: report

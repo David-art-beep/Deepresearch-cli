@@ -1,0 +1,120 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepresearch-cli"
+version = "0.1.0"
+description = "A configuration-first runtime for DeepResearch workflows"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "agent-client-protocol==0.9.0",
+  "ddgs==9.15.0",
+  "httpx==0.28.1",
+  "mcp==1.26.0",
+  "psutil>=5.9,<8",
+  "PyYAML>=6.0,<7",
+  "python-dotenv==1.2.2",
+  "starlette==1.0.1",
+  "uvicorn>=0.30,<1",
+  "yfinance>=0.2,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<10",
+]
+template = [
+  "python-docx>=1.1,<2",
+]
+
+[project.scripts]
+deepresearch = "deepresearch_cli.cli:main"
+deepresearch-search-mcp = "deepresearch_cli.search.mcp_server:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.data-files]
+"share/deepresearch-cli/config/workflows" = [
+  "config/workflows/*.yaml",
+]
+"share/deepresearch-cli/config/nodes" = [
+  "config/nodes/*.yaml",
+]
+"share/deepresearch-cli/assets/report-templates/pdf" = [
+  "assets/report-templates/pdf/*.typ",
+]
+"share/deepresearch-cli/assets/report-templates/content" = [
+  "assets/report-templates/content/*.yaml",
+]
+"share/deepresearch-cli/assets/report-templates/word" = [
+  "assets/report-templates/word/*.docx",
+]
+"share/deepresearch-cli/assets/web" = [
+  "assets/web/*.html",
+  "assets/web/*.css",
+  "assets/web/*.js",
+]
+"share/deepresearch-cli/search" = [
+  "search/README.md",
+  "search/.env.example",
+]
+"share/deepresearch-cli/search/sources" = [
+  "search/sources/*.yaml",
+]
+"share/deepresearch-cli/search/domains" = [
+  "search/domains/*.yaml",
+]
+"share/deepresearch-cli/search/providers" = [
+  "search/providers/*.py",
+]
+"share/deepresearch-cli/search/providers/academic" = [
+  "search/providers/academic/*.py",
+]
+"share/deepresearch-cli/prompts/v0.1" = [
+  "prompts/v0.1/*.md",
+  "prompts/v0.1/*.json",
+]
+"share/deepresearch-cli/prompts/v0.1/contracts/schemas" = [
+  "prompts/v0.1/contracts/schemas/briefing.schema.md",
+  "prompts/v0.1/contracts/schemas/evidence.schema.md",
+  "prompts/v0.1/contracts/schemas/outline.schema.md",
+  "prompts/v0.1/contracts/schemas/perspective_feedback.schema.md",
+  "prompts/v0.1/contracts/schemas/plan.schema.md",
+  "prompts/v0.1/contracts/schemas/supplement_plan.schema.md",
+]
+"share/deepresearch-cli/prompts/v0.1/contracts/validators" = [
+  "prompts/v0.1/contracts/validators/validate_briefing.py",
+  "prompts/v0.1/contracts/validators/validate_evidence.py",
+  "prompts/v0.1/contracts/validators/validate_outline.py",
+  "prompts/v0.1/contracts/validators/validate_plan.py",
+  "prompts/v0.1/contracts/validators/validate_supplement_plan.py",
+]
+"share/deepresearch-cli/prompts/v0.1/contracts/materializers" = [
+  "prompts/v0.1/contracts/materializers/derive_research_tasks.py",
+  "prompts/v0.1/contracts/materializers/derive_content_tasks.py",
+]
+"share/deepresearch-cli/prompts/v0.1/contracts/renderers" = [
+  "prompts/v0.1/contracts/renderers/prepare_citations.py",
+]
+"share/deepresearch-cli/skills/deepresearch-installer" = [
+  "skills/deepresearch-installer/SKILL.md",
+]
+"share/deepresearch-cli/skills/deepresearch-installer/agents" = [
+  "skills/deepresearch-installer/agents/openai.yaml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+  "live_hermes: opt-in acceptance against the installed Hermes ACP and configured model provider",
+  "live_codex: opt-in acceptance against the installed Codex ACP bridge and configured model provider",
+  "live_claude: opt-in acceptance against the installed Claude Code ACP adapter and configured model provider",
+]
