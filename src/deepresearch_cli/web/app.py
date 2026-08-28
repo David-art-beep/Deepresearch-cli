@@ -33,17 +33,33 @@ def create_app(
 
     def snapshot(run_id: str):
         try:
-            value = build_run_snapshot(store, run_id, output_dir=output_dir)
-            value["worker_active"] = controller.active(run_id)
-            return value
+            return build_run_snapshot(store, run_id, output_dir=output_dir)
         except RunNotFoundError:
             pending = controller.pending_snapshot(run_id)
             if pending is not None:
-                pending["worker_active"] = controller.active(run_id)
                 return pending
             raise
 
     initial_run_id: str | None = None
+
+    def latest_running_run_id() -> str | None:
+        """Return the newest persisted run that has not reached a terminal state."""
+        if not runs_dir.is_dir():
+            return None
+        candidates: list[tuple[str, int, str]] = []
+        for run_dir in runs_dir.iterdir():
+            if run_dir.is_symlink() or not run_dir.is_dir():
+                continue
+            try:
+                value = build_run_snapshot(store, run_dir.name, output_dir=output_dir)
+                if value.get("status") != "running":
+                    continue
+                created_at = str(value.get("created_at") or "")
+                candidates.append((created_at, run_dir.stat().st_mtime_ns, run_dir.name))
+            except Exception:
+                # A stale or partially written directory must not break the console.
+                continue
+        return max(candidates)[2] if candidates else None
 
     async def start_initial_run() -> None:
         nonlocal initial_run_id
@@ -56,15 +72,25 @@ def create_app(
         yield
 
     async def index(request: Request):
-        if request.url.path == "/" and initial_run_id is not None:
-            return RedirectResponse(f"/runs/{initial_run_id}", status_code=307)
-        return FileResponse(static_dir / "index.html")
+        if request.url.path == "/" and request.query_params.get("new") != "1":
+            active_run_id = initial_run_id or latest_running_run_id()
+            if active_run_id is not None:
+                return RedirectResponse(
+                    f"/runs/{active_run_id}",
+                    status_code=307,
+                    headers={"Cache-Control": "no-store"},
+                )
+        return FileResponse(
+            static_dir / "index.html", headers={"Cache-Control": "no-store"}
+        )
 
     async def asset(request: Request):
         name = request.path_params["name"]
         if name not in {"app.js", "styles.css"}:
             return JSONResponse({"error": "asset not found"}, status_code=404)
-        return FileResponse(static_dir / name)
+        return FileResponse(
+            static_dir / name, headers={"Cache-Control": "no-cache"}
+        )
 
     async def create_run(request: Request):
         try:
@@ -79,6 +105,12 @@ def create_app(
             return JSONResponse({"run_id": run_id, "url": f"/runs/{run_id}"}, status_code=202)
         except (ValueError, TypeError) as exc:
             return JSONResponse({"error": str(exc)}, status_code=400)
+
+    async def current_run(_: Request):
+        run_id = initial_run_id or latest_running_run_id()
+        if run_id is None:
+            return JSONResponse({"error": "no active run"}, status_code=404)
+        return JSONResponse({"run_id": run_id, "url": f"/runs/{run_id}"})
 
     async def get_run(request: Request):
         try:
@@ -116,18 +148,6 @@ def create_app(
 
         return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
-    async def resume(request: Request):
-        try:
-            body = await request.json()
-            if not isinstance(body, dict):
-                body = {}
-            controller.resume(request.path_params["run_id"], body)
-            return JSONResponse({"status": "resuming"}, status_code=202)
-        except RunNotFoundError:
-            return JSONResponse({"error": "run not found"}, status_code=404)
-        except (ValueError, TypeError) as exc:
-            return JSONResponse({"error": str(exc)}, status_code=409)
-
     async def result_file(request: Request):
         run_id, filename = request.path_params["run_id"], request.path_params["filename"]
         if Path(filename).name != filename or filename in {".", ".."}:
@@ -140,8 +160,8 @@ def create_app(
     routes = [
         Route("/", index), Route("/runs/{run_id}", index),
         Route("/assets/{name}", asset), Route("/api/runs", create_run, methods=["POST"]),
+        Route("/api/runs/current", current_run),
         Route("/api/runs/{run_id}", get_run), Route("/api/runs/{run_id}/events", events),
-        Route("/api/runs/{run_id}/resume", resume, methods=["POST"]),
         Route("/api/runs/{run_id}/files/{filename}", result_file),
     ]
     app = Starlette(debug=False, routes=routes, lifespan=lifespan)

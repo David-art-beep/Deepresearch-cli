@@ -118,13 +118,23 @@ def _add_execution(
     )
     parser.add_argument("--search-provider-python")
     parser.add_argument("--search-provider-limit", type=_provider_limit, default=20)
-    parser.add_argument(
+    camofox = parser.add_mutually_exclusive_group()
+    camofox.add_argument(
         "--camofox-fallback",
+        dest="camofox_fallback",
         action="store_true",
         help=(
-            "enable the code-controlled HTTP-first Camofox fallback in Research fetch_url"
+            "enable the code-controlled HTTP-first Camofox fallback in Research "
+            "fetch_url (default when the search MCP is enabled)"
         ),
     )
+    camofox.add_argument(
+        "--no-camofox-fallback",
+        dest="camofox_fallback",
+        action="store_false",
+        help="disable the default Camofox fallback",
+    )
+    parser.set_defaults(camofox_fallback=True)
     parser.add_argument(
         "--camofox-home",
         type=Path,
@@ -177,15 +187,17 @@ def _prompt_report_format(*, input_fn=None, output=None, is_tty=None) -> str:
             for value, _label, _description in _REPORT_FORMAT_OPTIONS
         }
     )
+    choice_numbers = [str(index) for index in range(1, len(_REPORT_FORMAT_OPTIONS) + 1)]
+    choice_hint = " 或 ".join(choice_numbers)
     while True:
-        print("请输入 1、2 或 3：", end="", file=output, flush=True)
+        print(f"请输入 {choice_hint}：", end="", file=output, flush=True)
         try:
             selected = input_fn("").strip()
         except EOFError as exc:
             raise ValueError("report format selection was cancelled") from exc
         if selected in choices:
             return choices[selected]
-        print("无效选择，请输入 1、2 或 3。", file=output)
+        print(f"无效选择，请输入 {choice_hint}。", file=output)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -313,7 +325,10 @@ def _service(args) -> WorkflowService:
         search_dir=getattr(args, "search_dir", None),
         search_provider_python=getattr(args, "search_provider_python", None),
         search_provider_limit=getattr(args, "search_provider_limit", 20),
-        camofox_fallback_enabled=getattr(args, "camofox_fallback", False),
+        camofox_fallback_enabled=(
+            getattr(args, "camofox_fallback", True)
+            and getattr(args, "search_mcp", True)
+        ),
         camofox_home=getattr(args, "camofox_home", None),
         camofox_base_url=getattr(args, "camofox_base_url", None),
     )

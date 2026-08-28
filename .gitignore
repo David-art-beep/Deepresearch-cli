@@ -10,4 +10,5 @@ build/
 runs/
 output/
 /benchmarks/
+/dashboard/
 /search/.env

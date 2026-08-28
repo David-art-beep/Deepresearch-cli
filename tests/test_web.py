@@ -16,9 +16,6 @@ class _FakeManager:
         self.started.append(dict(value))
         return "run-direct-start"
 
-    def active(self, _run_id):
-        return True
-
     def pending_snapshot(self, _run_id):
         return None
 
@@ -67,6 +64,38 @@ def test_web_serves_console_and_snapshot(tmp_path):
         assert response.json()["query"] == "测试真实进度"
 
 
+def test_web_root_redirects_to_latest_running_persisted_run(tmp_path):
+    _, run_id = _persisted_run(tmp_path)
+    app = create_app(runs_dir=tmp_path / "runs", output_dir=tmp_path / "output")
+    with TestClient(app) as client:
+        response = client.get("/", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"] == f"/runs/{run_id}"
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_web_current_run_endpoint_exposes_running_run(tmp_path):
+    _, run_id = _persisted_run(tmp_path)
+    app = create_app(runs_dir=tmp_path / "runs", output_dir=tmp_path / "output")
+    with TestClient(app) as client:
+        response = client.get("/api/runs/current")
+
+    assert response.status_code == 200
+    assert response.json() == {"run_id": run_id, "url": f"/runs/{run_id}"}
+
+
+def test_web_explicit_new_page_does_not_redirect_to_running_run(tmp_path):
+    _persisted_run(tmp_path)
+    app = create_app(runs_dir=tmp_path / "runs", output_dir=tmp_path / "output")
+    with TestClient(app) as client:
+        response = client.get("/?new=1", follow_redirects=False)
+
+    assert response.status_code == 200
+    assert "DeepResearch 控制台" in response.text
+    assert response.headers["cache-control"] == "no-store"
+
+
 def test_web_assets_expose_research_workbench_layout(tmp_path):
     app = create_app(runs_dir=tmp_path / "runs", output_dir=tmp_path / "output")
     with TestClient(app) as client:
@@ -75,6 +104,8 @@ def test_web_assets_expose_research_workbench_layout(tmp_path):
 
     assert script.status_code == 200
     assert styles.status_code == 200
+    assert script.headers["cache-control"] == "no-cache"
+    assert styles.headers["cache-control"] == "no-cache"
     assert "SenseNova Workbench" in script.text
     assert "报告形式" in script.text
     assert 'name="report_format" required' in script.text
@@ -86,12 +117,19 @@ def test_web_assets_expose_research_workbench_layout(tmp_path):
     assert "最终报告" in script.text
     assert "检索进度与转化" in script.text
     assert "Source 耗时与调用统计" in script.text
+    assert "/api/runs/current" in script.text
+    assert "setInterval(followCurrentRun, 1000)" in script.text
+    assert 'href="/?new=1"' in script.text
     assert "所有统计均来自当前运行的持久化产物" not in script.text
     assert "缓存复用" not in script.text
     assert "<dt>缓存</dt>" not in script.text
+    assert "运行当前未连接执行器" not in script.text
+    assert "恢复此运行" not in script.text
+    assert "/resume" not in script.text
     assert ".dashboard-shell" in styles.text
     assert ".status-sidebar" in styles.text
     assert ".domain-progress" in styles.text
+    assert ".resume-callout" not in styles.text
 
 
 def test_web_rejects_unknown_run(tmp_path):
@@ -99,6 +137,14 @@ def test_web_rejects_unknown_run(tmp_path):
     with TestClient(app) as client:
         response = client.get("/api/runs/run-missing")
         assert response.status_code == 404
+
+
+def test_web_does_not_offer_ambiguous_resume_endpoint(tmp_path):
+    _, run_id = _persisted_run(tmp_path)
+    app = create_app(runs_dir=tmp_path / "runs", output_dir=tmp_path / "output")
+    with TestClient(app) as client:
+        response = client.post(f"/api/runs/{run_id}/resume", json={})
+    assert response.status_code == 404
 
 
 def test_web_requires_explicit_report_format(tmp_path):

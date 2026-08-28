@@ -103,7 +103,7 @@ deepresearch browser status --json
 - `running: true`；
 - `health.ok: true`。
 
-不得把托管服务暴露到 `127.0.0.1` 以外，不得修改任何 Harness 的全局 MCP 配置，也不得在安装过程中打开可见浏览器。DeepResearch 只在研究命令使用 `--camofox-fallback` 时，由 Search MCP 的 `fetch_url` 在普通 HTTP 失败后执行代码控制的 Camofox 回退；Agent 不直接获得 Camofox 操作工具。
+不得把托管服务暴露到 `127.0.0.1` 以外，不得修改任何 Harness 的全局 MCP 配置，也不得在安装过程中打开可见浏览器。DeepResearch 在 Search MCP 开启时默认启用 Camofox 回退，由 `fetch_url` 在普通 HTTP 失败后执行代码控制的 Camofox 回退；只有用户明确要求禁用时才传入 `--no-camofox-fallback`。Agent 不直接获得 Camofox 操作工具。
 
 ## 失败处理
 

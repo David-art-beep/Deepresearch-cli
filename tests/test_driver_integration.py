@@ -370,7 +370,7 @@ def test_agent_context_includes_resources_and_derived_prompt_view(tmp_path):
     assert research.agent_context["prompt"]["output_path"].endswith("/evidence.json")
     assert "checkpoint_path" not in research.agent_context["prompt"]
     assert "search_materials_path" not in research.agent_context["prompt"]
-    assert research.timeout_seconds == 720.0
+    assert research.timeout_seconds == 1500.0
     assert set(research.agent_context["resources"]) == {
         "evidence.schema.md",
         "supplement_plan.schema.md",

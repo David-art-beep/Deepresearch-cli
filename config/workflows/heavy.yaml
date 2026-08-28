@@ -20,13 +20,10 @@ steps:
 timeouts:
   scout: 300
   plan: 300
-  research: 1140
+  research: 1500
   review: 300
   perspective: 300
   supplement-planner: 240
-  research-2: 900
-  review-2: 240
-  perspective-2: 240
   report-planner: 300
   report-writer: 600
   final-review-diagnostic: 420

@@ -56,7 +56,7 @@ class ExecutionSessionConfig:
     search_dir: Optional[Path] = None
     search_provider_python: Optional[str] = None
     search_provider_limit: int = 20
-    camofox_fallback_enabled: bool = False
+    camofox_fallback_enabled: bool = True
     camofox_home: Optional[Path] = None
     camofox_base_url: Optional[str] = None
 

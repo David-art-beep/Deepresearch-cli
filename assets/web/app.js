@@ -1,7 +1,9 @@
 const app = document.querySelector('#app');
 const runId = location.pathname.match(/^\/runs\/([^/]+)$/)?.[1];
+const forceLanding = new URLSearchParams(location.search).get('new') === '1';
 let source;
 let activeView = 'overview';
+let currentRunTimer;
 
 const esc = (value) => String(value ?? '').replace(
   /[&<>"']/g,
@@ -84,6 +86,21 @@ function landing() {
       button.innerHTML = `${icon('plus')}开始研究`;
     }
   });
+
+  if (!forceLanding) {
+    const followCurrentRun = async () => {
+      try {
+        const response = await fetch('/api/runs/current', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.url) location.replace(data.url);
+      } catch (_) {
+        // The landing page remains usable while the local server reconnects.
+      }
+    };
+    followCurrentRun();
+    currentRunTimer = window.setInterval(followCurrentRun, 1000);
+  }
 }
 
 function lifecycle(pipeline) {
@@ -171,7 +188,6 @@ function overview(s, progress, dimensions, sections) {
         ${dimensionCards(dimensions)}
         <div class="material-groups">${sectionRows(sections)}${activityRows(s.activity || [])}</div>
       </section>
-      ${s.status === 'running' && !s.worker_active ? `<div class="resume-callout"><div><strong>运行当前未连接执行器</strong><span>持久化进度仍然完整，可以从未完成节点继续。</span></div><button class="secondary-button" id="resume">恢复此运行</button></div>` : ''}
     </div>`;
 }
 
@@ -206,7 +222,7 @@ function dashboard(s, connected = false) {
       <header class="topbar">
         <div class="brand">${icon('research')}<strong>SenseNova Workbench</strong></div>
         <div class="run-identity"><span>${esc(s.run_id)}</span><i></i><span>${esc(String(s.mode || 'heavy').toUpperCase())}</span></div>
-        <div class="topbar-actions"><span class="connection ${connected ? 'live' : ''}"><i></i>${connected ? '实时同步' : '正在连接'}</span><a class="icon-button" href="/" title="新建研究">${icon('plus')}</a></div>
+        <div class="topbar-actions"><span class="connection ${connected ? 'live' : ''}"><i></i>${connected ? '实时同步' : '正在连接'}</span><a class="icon-button" href="/?new=1" title="新建研究">${icon('plus')}</a></div>
       </header>
       <div class="dashboard-shell">
         <aside class="status-sidebar">
@@ -234,19 +250,6 @@ function dashboard(s, connected = false) {
     activeView = button.dataset.view;
     dashboard(s, connected);
   }));
-  document.querySelector('#resume')?.addEventListener('click', async (event) => {
-    event.currentTarget.disabled = true;
-    const response = await fetch(`/api/runs/${encodeURIComponent(runId)}/resume`, {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}',
-    });
-    if (!response.ok) {
-      const data = await response.json();
-      alert(data.error || '恢复失败');
-      event.currentTarget.disabled = false;
-    } else {
-      connect();
-    }
-  });
 }
 
 async function load() {

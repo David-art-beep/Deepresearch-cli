@@ -27,14 +27,15 @@ steps:
   - render
 timeouts:
   plan: 300
-  research: 720
+  research: 1500
   report-writer: 420
 result: report
 ```
 
 必填字段固定为 `version`、`name`、`steps`、`result`，仅允许增加可选的 `timeouts`。
-`timeouts` 仅适用于 Agent 节点，使用秒为单位，值必须有限且大于零。Node ID 为该类节点提供预算，稳定 Step ID
-（如 `research-2`）可以覆盖某次重复执行。编译后的 timeout 写入 Manifest；执行时优先使用它，
+`timeouts` 仅适用于 Agent 节点，使用秒为单位，值必须有限且大于零。Node ID 为该类节点提供统一预算；
+同一 Workflow 内重复出现的同类节点使用相同超时，不接受 `research-2` 这类按轮次配置。不同模式的
+Workflow 仍可以为同一 Node 设置不同预算。编译后的 timeout 写入 Manifest；执行时优先使用它，
 未配置的 Agent 节点才回退到 `--node-timeout-seconds`。确定性 Script 节点不设置超时，也不使用
 CLI 的统一兜底；为 Script 节点配置 Workflow timeout 会在编译时直接报错。
 

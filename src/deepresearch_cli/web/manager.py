@@ -32,7 +32,10 @@ class WebRunManager:
             search_dir=Path(value["search_dir"]).expanduser() if value.get("search_dir") else None,
             search_provider_python=value.get("search_provider_python") or None,
             search_provider_limit=int(value.get("search_provider_limit", 20)),
-            camofox_fallback_enabled=bool(value.get("camofox_fallback", False)),
+            camofox_fallback_enabled=(
+                bool(value.get("camofox_fallback", True))
+                and bool(value.get("search_mcp", True))
+            ),
             camofox_home=Path(value["camofox_home"]).expanduser() if value.get("camofox_home") else None,
             camofox_base_url=value.get("camofox_base_url") or None,
         )
@@ -91,14 +94,3 @@ class WebRunManager:
     def pending_snapshot(self, run_id: str) -> dict[str, Any] | None:
         value = self.pending.get(run_id)
         return dict(value) if value else None
-
-    def active(self, run_id: str) -> bool:
-        task = self.tasks.get(run_id)
-        return bool(task and not task.done())
-
-    def resume(self, run_id: str, value: Mapping[str, Any]) -> None:
-        if self.active(run_id):
-            raise ValueError("run is already active")
-        task = asyncio.create_task(self._service(value).resume(run_id))
-        self.tasks[run_id] = task
-        task.add_done_callback(lambda finished, selected=run_id: self._settled(selected, finished))

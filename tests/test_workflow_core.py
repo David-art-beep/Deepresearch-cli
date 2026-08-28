@@ -75,7 +75,7 @@ def test_quick_workflow_is_a_plain_ordered_yaml_list():
     assert compiled.result_type == "report"
     assert compiled.result_media_type == "text/markdown"
     assert {item.step_id: item.timeout_seconds for item in compiled.steps} == {
-        "research": 480.0,
+        "research": 1500.0,
         "report-writer": 300.0,
         "render": None,
     }
@@ -108,8 +108,8 @@ def test_repeating_yaml_nodes_builds_the_second_research_cycle():
     ]
     research_2 = next(item for item in compiled.steps if item.step_id == "research-2")
     research_1 = next(item for item in compiled.steps if item.step_id == "research")
-    assert research_1.timeout_seconds == 1140.0
-    assert research_2.timeout_seconds == 900.0
+    assert research_1.timeout_seconds == 1500.0
+    assert research_2.timeout_seconds == 1500.0
     task = next(item for item in research_2.bindings if item.port == "task")
     assert task.mode == "each"
     assert task.source_step_id == "supplement-planner"
@@ -219,7 +219,7 @@ def test_workflow_rejects_invalid_step_timeouts(timeout):
         )
 
 
-def test_compiler_rejects_timeout_for_an_unknown_step():
+def test_compiler_rejects_timeout_for_an_unknown_node():
     workflow = WorkflowSpec(
         name="unknown-timeout",
         steps=("research", "report-writer", "render"),
@@ -227,7 +227,19 @@ def test_compiler_rejects_timeout_for_an_unknown_step():
         timeouts={"missing-node": 30},
     )
 
-    with pytest.raises(WorkflowCompileError, match="unknown steps: missing-node"):
+    with pytest.raises(WorkflowCompileError, match="unknown agent nodes: missing-node"):
+        compile_workflow(workflow, NodeRegistry.load(), output_format="markdown")
+
+
+def test_compiler_rejects_per_occurrence_timeout_override():
+    workflow = WorkflowSpec(
+        name="repeated-timeout",
+        steps=("research", "research", "report-writer", "render"),
+        result="report",
+        timeouts={"research": 30, "research-2": 20},
+    )
+
+    with pytest.raises(WorkflowCompileError, match="unknown agent nodes: research-2"):
         compile_workflow(workflow, NodeRegistry.load(), output_format="markdown")
 
 
@@ -254,7 +266,7 @@ def test_compiled_workflow_round_trip_preserves_step_timeouts():
 
     assert [item.timeout_seconds for item in restored.steps] == [
         300.0,
-        720.0,
+        1500.0,
         420.0,
         None,
     ]

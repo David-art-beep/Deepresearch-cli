@@ -63,8 +63,6 @@ def compile_workflow(
             raise WorkflowCompileError(f"workflow references unknown node: {node_id}") from exc
         counts[node_id] += 1
         step_id = node_id if counts[node_id] == 1 else f"{node_id}-{counts[node_id]}"
-        if node.kind == "agent":
-            valid_timeout_keys.update((node_id, step_id))
         bindings = []
         for port in node.inputs:
             candidates = [
@@ -88,9 +86,9 @@ def compile_workflow(
                     required=port.required,
                 )
             )
-        timeout_seconds = workflow.timeouts.get(
-            step_id, workflow.timeouts.get(node_id)
-        )
+        # Timeouts belong to node types, not individual repeated steps. This
+        # keeps every invocation of the same node consistent within a mode.
+        timeout_seconds = workflow.timeouts.get(node_id)
         if timeout_seconds is not None and node.kind == "script":
             raise WorkflowCompileError(
                 f"workflow timeout {step_id} targets deterministic script node {node_id}; "
@@ -109,7 +107,7 @@ def compile_workflow(
     unknown_timeout_keys = set(workflow.timeouts) - valid_timeout_keys
     if unknown_timeout_keys:
         raise WorkflowCompileError(
-            "workflow timeouts reference unknown steps: "
+            "workflow timeouts reference unknown agent nodes: "
             + ", ".join(sorted(unknown_timeout_keys))
         )
 

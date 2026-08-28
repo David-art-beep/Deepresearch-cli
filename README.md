@@ -108,7 +108,8 @@ Quick、Normal 和 Heavy 都可以使用 Web 控制台。页面会按当前模�
 研究阶段、研究维度、证据/来源数量、章节写作状态和活动流；Normal 不会显示 Heavy 独有的
 Review、Perspective 或分章节规划节点。进度不是计时器或模型猜测，而是从已提交到 Journal 的节点与章节实例
 实时重建；浏览器用 SSE 接收更新。刷新页面后，数据仍可从 Manifest、Journal 和
-Artifact 恢复。服务重启后，打开原运行地址并点击“恢复此运行”即可继续。
+Artifact 恢复。Web 只展示持久化进度，不判断终端执行器是否仍存活，也不从页面恢复 Run；
+确认原进程已经结束后，使用 `deepresearch resume <run-id> --harness <harness>` 继续未完成节点。
 
 Heavy 的 `report-planner` 产出内容任务后，页面才知道准确的写作章节总数；并行的
 `report-writer` 实例按真实完成顺序更新。Normal 和 Quick 没有分章节 Planner，页面改为按其
@@ -127,15 +128,16 @@ steps:
   - report-writer
   - render
 timeouts:
-  research: 480
+  research: 1500
   report-writer: 300
 result: report
 ```
 
 `steps` 就是执行顺序，`timeouts` 的单位是秒，并且只用于 Agent 节点。确定性 Script 节点直接执行，
-不接受 Workflow 超时，也不使用 CLI 超时兜底。Agent 超时可以按 Node ID 配置；重复节点还可以用编译后的
-Step ID 单独覆盖，例如 `research` 作用于第一轮并作为后续同类节点的默认值，`research-2` 只覆盖
-第二轮。Workflow 超时优先于 `--node-timeout-seconds`；CLI 参数只为没有配置的 Agent 节点提供兜底。
+不接受 Workflow 超时，也不使用 CLI 超时兜底。Agent 超时按 Node ID 配置；同一 Workflow 中重复出现的
+同类节点统一使用该 Node ID 的超时，不再接受 `research-2` 这类按轮次覆盖。Quick、Normal 和 Heavy
+仍可以在各自的 Workflow 中为同一 Node 配置不同超时。Workflow 超时优先于
+`--node-timeout-seconds`；CLI 参数只为没有配置的 Agent 节点提供兜底。
 `--no-node-timeout` 只关闭这个兜底，不会移除 Workflow 已声明的节点预算。
 重复节点表示再次执行。例如补研后再次 Review 和 Perspective，只需这样写：
 
@@ -160,8 +162,7 @@ steps:
   - final-review-recheck
   - render
 timeouts:
-  research: 1140
-  research-2: 900
+  research: 1500
   report-writer: 600
 result: report
 ```
@@ -436,7 +437,7 @@ uv run deepresearch "研究问题" \
 
 完整搜索合同见 [`docs/search-mcp.md`](docs/search-mcp.md)。
 
-### Camofox 代码级回退（可选）
+### Camofox 代码级回退（默认开启）
 
 Research 的 Search MCP 提供统一 `fetch_url`：代码固定先执行普通 HTTP，只有遇到 403、明确
 反自动化挑战、JavaScript 空壳或传输失败时，才通过 Camofox REST 执行一次
@@ -454,8 +455,7 @@ uv run deepresearch browser status
 uv run deepresearch "研究问题" \
   --mode heavy \
   --report-format formal_report \
-  --harness hermes \
-  --camofox-fallback
+  --harness hermes
 ```
 
 默认安装目录是 `~/.deepresearch-cli/camofox`，服务只绑定 `127.0.0.1:9377`，并关闭 Camofox
@@ -466,11 +466,12 @@ uv run deepresearch "研究问题" \
 uv run deepresearch browser stop
 ```
 
-每个 Research attempt 使用独立的 Camofox 用户与 Session 标识。代码禁止私网目标、同一 URL
+Search MCP 开启时，Research 默认启用 Camofox 回退；需要完全禁用时传入
+`--no-camofox-fallback`。每个 Research attempt 使用独立的 Camofox 用户与 Session 标识。代码禁止私网目标、同一 URL
 重复回退和 429 浏览器重试，并在成功、失败、超时或 CAPTCHA 情况下都执行标签页关闭。不允许登录、
 导入 Cookie、填写表单或绕过 CAPTCHA、付费墙和访问控制。Camofox 未安装或服务不可用时返回明确
-失败原因，Research 必须切换来源，不阻塞 Evidence 产物。`--camofox-fallback` 依赖默认启用的 Search
-MCP，不能与 `--no-search-mcp` 同时使用。
+失败原因，Research 必须切换来源，不阻塞 Evidence 产物。使用 `--no-search-mcp` 时会同时关闭
+Camofox 回退。
 
 ### Agent 自动安装 Skill
 

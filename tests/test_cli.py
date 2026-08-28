@@ -46,6 +46,19 @@ def test_research_accepts_camofox_fallback_configuration():
     assert args.camofox_base_url == "http://127.0.0.1:9377"
 
 
+def test_camofox_fallback_is_enabled_by_default_and_can_be_disabled():
+    default_args = build_parser().parse_args([
+        "Research topic", "--report-format", "formal_report", "--harness", "hermes",
+    ])
+    disabled_args = build_parser().parse_args([
+        "Research topic", "--report-format", "formal_report", "--harness", "hermes",
+        "--no-camofox-fallback",
+    ])
+
+    assert default_args.camofox_fallback is True
+    assert disabled_args.camofox_fallback is False
+
+
 def test_browser_management_commands_are_exposed():
     args = build_parser().parse_args([
         "browser", "setup", "--home", "/opt/camofox", "--npm-command", "npm",
@@ -129,6 +142,8 @@ def test_report_format_prompt_accepts_a_number():
     assert selected == "formal_report"
     assert "请选择报告形式" in output.getvalue()
     assert "正式报告" in output.getvalue()
+    assert "请输入 1 或 2：" in output.getvalue()
+    assert "或 3" not in output.getvalue()
 
 
 def test_standard_report_is_no_longer_accepted():
@@ -160,6 +175,7 @@ def test_report_format_prompt_retries_an_invalid_selection():
 
     assert selected == "formal_report"
     assert "无效选择" in output.getvalue()
+    assert "无效选择，请输入 1 或 2。" in output.getvalue()
 
 
 def test_report_format_prompt_requires_an_option_in_noninteractive_mode():
