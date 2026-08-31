@@ -108,8 +108,8 @@ Run 创建时快照编译后的 Workflow 和本 Run 使用的完整 Node Spec。
 ## 测试
 
 ```bash
-uv run pytest
-uv build
+.venv/bin/python -m pytest
+.venv/bin/python -m build
 ```
 
 普通 suite 覆盖：YAML 编译、重复节点、空/非空补研 batch、端口 fan-out、并发、resume、一次 Agent repair、HTML 导出、Script/Agent Node YAML、Artifact 篡改和旧 Manifest 拒绝。
@@ -118,13 +118,13 @@ uv build
 
 ```bash
 DEEPRESEARCH_LIVE_HERMES=1 \
-  uv run pytest tests/test_live_hermes_acceptance.py -m live_hermes -s
+  .venv/bin/python -m pytest tests/test_live_hermes_acceptance.py -m live_hermes -s
 
 DEEPRESEARCH_LIVE_CODEX=1 \
-  uv run pytest tests/test_live_codex_acceptance.py -m live_codex -s
+  .venv/bin/python -m pytest tests/test_live_codex_acceptance.py -m live_codex -s
 
 DEEPRESEARCH_LIVE_CLAUDE=1 \
-  uv run pytest tests/test_live_claude_acceptance.py -m live_claude -s
+  .venv/bin/python -m pytest tests/test_live_claude_acceptance.py -m live_claude -s
 ```
 
 普通测试通过不等于模型质量或搜索 provider 凭据已经验收。

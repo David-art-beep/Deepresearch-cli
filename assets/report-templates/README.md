@@ -27,5 +27,6 @@ Node Spec 快照中。因此，恢复任务时不依赖这个目录里的当前�
 修改 Word 模板生成脚本后，使用以下命令重新生成并写入仓库的模板文件：
 
 ```bash
-uv run --extra template python scripts/build_reference_docx.py
+.venv/bin/python -m pip install -e ".[template]"
+.venv/bin/python scripts/build_reference_docx.py
 ```

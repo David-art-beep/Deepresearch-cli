@@ -83,8 +83,11 @@ def test_adding_one_source_file_registers_a_new_provider_without_code_changes(
 
 
 def test_registry_dotenv_resolves_script_and_supplies_only_declared_source_env(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch,
 ) -> None:
+    monkeypatch.setenv(
+        "DEEPRESEARCH_SEARCH_CONFIG_HOME", str(tmp_path / "empty-user-config")
+    )
     search_dir = tmp_path / "search"
     external_scripts = tmp_path / "provider-scripts"
     script = external_scripts / "private_search.py"

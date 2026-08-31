@@ -69,8 +69,10 @@ print(json.dumps({{'items': [{{'title': a.query, 'url': 'https://example.test/' 
         )
         await manager.ensure_started(_invocation(runs_dir, "d1-a1"))
         assert manager.url and manager.token
-        first = SearchCoordinatorClient(url=manager.url, token=manager.token, namespace="d1-a1")
-        second = SearchCoordinatorClient(url=manager.url, token=manager.token, namespace="d2-a1")
+        first_url, first_token = manager.credentials("d1-a1")
+        second_url, second_token = manager.credentials("d2-a1")
+        first = SearchCoordinatorClient(url=first_url, token=first_token, namespace="d1-a1")
+        second = SearchCoordinatorClient(url=second_url, token=second_token, namespace="d2-a1")
         one, two = await asyncio.gather(
             asyncio.to_thread(first.batch_search, _search("shared")),
             asyncio.to_thread(second.batch_search, _search("shared")),
@@ -79,6 +81,15 @@ print(json.dumps({{'items': [{{'title': a.query, 'url': 'https://example.test/' 
         assert call_log.read_text(encoding="utf-8").splitlines() == ["shared"]
         assert first.search_results()["total"] == 1
         assert second.search_results()["total"] == 1
+        escaped = SearchCoordinatorClient(
+            url=first_url, token=first_token, namespace="d2-a1"
+        )
+        try:
+            escaped.search_results()
+        except RuntimeError as exc:
+            assert "HTTP 401" in str(exc)
+        else:
+            raise AssertionError("attempt credential accessed another namespace")
         metrics = build_search_metrics(runs_dir / "run-test")
         assert metrics["api_calls"] == 1
         assert metrics["cache_reused"] == 1
@@ -94,7 +105,8 @@ print(json.dumps({{'items': [{{'title': a.query, 'url': 'https://example.test/' 
         )
         await resumed.ensure_started(_invocation(runs_dir, "d3-a1"))
         assert resumed.url and resumed.token
-        third = SearchCoordinatorClient(url=resumed.url, token=resumed.token, namespace="d3-a1")
+        third_url, third_token = resumed.credentials("d3-a1")
+        third = SearchCoordinatorClient(url=third_url, token=third_token, namespace="d3-a1")
         reused = await asyncio.to_thread(third.batch_search, _search("shared"))
         assert reused["executed_provider_count"] == 0
         assert third.search_results()["total"] == 1
@@ -108,7 +120,10 @@ print(json.dumps({{'items': [{{'title': a.query, 'url': 'https://example.test/' 
 def test_proxy_launch_receives_only_coordinator_capability(tmp_path: Path) -> None:
     class Endpoint:
         url = "http://127.0.0.1:12345"
-        token = "coordinator-secret"
+
+        @classmethod
+        def credentials(cls, namespace: str) -> tuple[str, str]:
+            return cls.url, "scoped-" + namespace
 
     spec = SearchMcpSupport(coordinator=Endpoint()).build(
         identity="run/d1/attempt-1",
@@ -116,6 +131,7 @@ def test_proxy_launch_receives_only_coordinator_capability(tmp_path: Path) -> No
     )
     assert spec.env["DEEPRESEARCH_SEARCH_NAMESPACE"] == "run/d1/attempt-1"
     assert spec.env["DEEPRESEARCH_SEARCH_COORDINATOR_URL"] == Endpoint.url
+    assert spec.env["DEEPRESEARCH_SEARCH_COORDINATOR_TOKEN"] == "scoped-run/d1/attempt-1"
     assert "DEEPRESEARCH_SEARCH_DIR" not in spec.env
     assert "DEEPRESEARCH_SEARCH_PROVIDER_PYTHON" not in spec.env
     assert "DEEPRESEARCH_SEARCH_ENV_FILE" not in spec.env

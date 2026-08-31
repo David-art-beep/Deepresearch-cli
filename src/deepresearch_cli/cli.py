@@ -269,13 +269,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     sources = commands.add_parser("sources", help="discover configured search sources")
     source_commands = sources.add_subparsers(dest="sources_command", required=True)
-    for command_name in ("list", "describe"):
+    for command_name in ("list", "describe", "init"):
         source_command = source_commands.add_parser(command_name)
         if command_name == "describe":
             source_command.add_argument("source_name")
         source_command.add_argument("--search-dir", type=Path)
         source_command.add_argument("--search-provider-python")
         source_command.add_argument("--json", action="store_true")
+        if command_name == "init":
+            source_command.add_argument("--force", action="store_true")
 
     domains = commands.add_parser("domains", help="discover configured search domains")
     domain_commands = domains.add_subparsers(dest="domains_command", required=True)
@@ -391,6 +393,19 @@ async def _run(args) -> int:
         _emit(value, as_json=args.json)
         return 0
     if args.command in {"sources", "domains"}:
+        if args.command == "sources" and args.sources_command == "init":
+            from deepresearch_cli.search.paths import initialize_user_search_environment
+
+            path = initialize_user_search_environment(overwrite=args.force)
+            _emit(
+                {
+                    "status": "ready",
+                    "path": str(path),
+                    "next": "edit this file, then run `deepresearch sources list`",
+                },
+                as_json=args.json,
+            )
+            return 0
         search_dir = (args.search_dir or builtin_search_dir()).expanduser().resolve()
         registry = ProviderRegistry(
             search_dir=search_dir,

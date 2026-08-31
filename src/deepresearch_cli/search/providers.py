@@ -79,13 +79,18 @@ def load_search_environment(
     profile_env_file: Optional[Path] = None,
     process_environment: Optional[Mapping[str, str]] = None,
 ) -> dict[str, str]:
-    """Load search settings with process > profile > registry .env precedence."""
+    """Load settings with process > profile > user > registry precedence."""
+
+    from .paths import user_search_env_file
 
     selected: dict[str, str] = {}
-    paths = [search_dir.expanduser().resolve() / ".env"]
+    paths = [
+        search_dir.expanduser().resolve() / ".env",
+        user_search_env_file(),
+    ]
     if profile_env_file is not None:
         paths.append(profile_env_file.expanduser().resolve())
-    for path in paths:
+    for path in dict.fromkeys(paths):
         if not path.is_file():
             continue
         for name, value in dotenv_values(path).items():

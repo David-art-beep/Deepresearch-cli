@@ -1,0 +1,38 @@
+{
+  "name": "@david-art-beep/deepresearch-cli",
+  "version": "0.1.0",
+  "description": "npm installer and launcher for the DeepResearch Python CLI",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/David-art-beep/Deepresearch-cli.git"
+  },
+  "homepage": "https://github.com/David-art-beep/Deepresearch-cli#readme",
+  "bugs": {
+    "url": "https://github.com/David-art-beep/Deepresearch-cli/issues"
+  },
+  "bin": {
+    "deepresearch": "bin/deepresearch.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "scripts/install.js",
+    "vendor/*.whl",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/install.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "deep-research",
+    "hermes",
+    "codex",
+    "claude-code",
+    "cli"
+  ]
+}

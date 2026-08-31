@@ -23,6 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "build>=1.2,<2",
   "pytest>=8,<10",
 ]
 template = [
@@ -103,11 +104,11 @@ where = ["src"]
 "share/deepresearch-cli/prompts/v0.1/contracts/renderers" = [
   "prompts/v0.1/contracts/renderers/prepare_citations.py",
 ]
-"share/deepresearch-cli/skills/deepresearch-installer" = [
-  "skills/deepresearch-installer/SKILL.md",
+"share/deepresearch-cli/skills/deepresearch" = [
+  "skills/deepresearch/SKILL.md",
 ]
-"share/deepresearch-cli/skills/deepresearch-installer/agents" = [
-  "skills/deepresearch-installer/agents/openai.yaml",
+"share/deepresearch-cli/skills/deepresearch/agents" = [
+  "skills/deepresearch/agents/openai.yaml",
 ]
 
 [tool.pytest.ini_options]
@@ -117,4 +118,5 @@ markers = [
   "live_hermes: opt-in acceptance against the installed Hermes ACP and configured model provider",
   "live_codex: opt-in acceptance against the installed Codex ACP bridge and configured model provider",
   "live_claude: opt-in acceptance against the installed Claude Code ACP adapter and configured model provider",
+  "live_openclaw: opt-in acceptance against the installed OpenClaw ACP endpoint and configured Gateway",
 ]

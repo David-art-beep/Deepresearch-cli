@@ -62,7 +62,7 @@ class ExecutionSessionConfig:
 
     def __post_init__(self) -> None:
         if self.harness not in {
-            "hermes", "codex", "codex-exec", "claude-code", "stub"
+            "hermes", "codex", "codex-exec", "claude-code", "openclaw", "stub"
         }:
             raise ValueError("unsupported harness: %s" % self.harness)
         if self.harness_model is not None and not self.harness_model.strip():

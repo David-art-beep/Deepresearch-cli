@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from .registry import DomainRegistry, ProviderRegistry, load_search_environment
+from .coordinator_auth import derive_namespace_token
 from .service import SearchService
 from .sqlite_store import SQLiteSearchStore
 
@@ -99,10 +100,6 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path != "/rpc":
             self._write(404, {"ok": False, "error": "not found"})
             return
-        supplied = self.headers.get("Authorization", "")
-        if not hmac.compare_digest(supplied, f"Bearer {self.server.token}"):
-            self._write(401, {"ok": False, "error": "unauthorized"})
-            return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             if not 0 < length <= _MAX_REQUEST_BYTES:
@@ -117,6 +114,15 @@ class _Handler(BaseHTTPRequestHandler):
                 raise ValueError("invalid coordinator method or params")
             if not isinstance(namespace, str) or not namespace or len(namespace) > 300:
                 raise ValueError("invalid search namespace")
+            supplied = self.headers.get("Authorization", "")
+            expected_token = (
+                self.server.token
+                if method == "health"
+                else derive_namespace_token(self.server.token, namespace)
+            )
+            if not hmac.compare_digest(supplied, f"Bearer {expected_token}"):
+                self._write(401, {"ok": False, "error": "unauthorized"})
+                return
             result = self.server.dispatch(method, params, namespace)
         except Exception as exc:
             self._write(400, {"ok": False, "error": f"{type(exc).__name__}: {exc}"})

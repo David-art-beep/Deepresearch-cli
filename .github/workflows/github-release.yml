@@ -1,0 +1,56 @@
+name: GitHub release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify tag matches package version
+        shell: python
+        run: |
+          import json
+          import os
+          import pathlib
+          import tomllib
+
+          root = pathlib.Path.cwd()
+          python_version = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
+          npm_version = json.loads((root / "npm/package.json").read_text())["version"]
+          tag_version = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          if not (python_version == npm_version == tag_version):
+              raise SystemExit(
+                  f"version mismatch: tag={tag_version}, python={python_version}, npm={npm_version}"
+              )
+      - run: python -m pip install build
+      - run: python scripts/build_npm_package.py
+      - name: Smoke-test packaged installation
+        env:
+          DEEPRESEARCH_NPM_RUNTIME_HOME: ${{ runner.temp }}/deepresearch-runtime
+        run: |
+          npm install --global --prefix "${RUNNER_TEMP}/npm-prefix" dist/*.tgz
+          "${RUNNER_TEMP}/npm-prefix/bin/deepresearch" --help
+      - name: Publish GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/*.tgz \
+            dist/*.whl \
+            dist/*.tar.gz \
+            dist/SHA256SUMS \
+            --title "DeepResearch CLI ${GITHUB_REF_NAME}" \
+            --generate-notes

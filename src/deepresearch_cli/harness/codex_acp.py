@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import dataclasses
 import os
 import shutil
 import sys
@@ -22,15 +21,15 @@ from deepresearch_cli.search.registry import (
 
 from .acp.launch import AcpLaunchSpec
 from .camofox_fallback import CamofoxFallbackSupport
-from .hermes_acp import HermesAcpAttemptRuntime
-from .protocol import AgentExecutionResult, AgentInvocation, HarnessError
+from .acp_agent import AcpAgentAttemptRuntime
+from .protocol import AgentInvocation, HarnessError
 from .search_mcp import SearchMcpSupport
 
 
-class CodexAcpAttemptRuntime(HermesAcpAttemptRuntime):
+class CodexAcpAttemptRuntime(AcpAgentAttemptRuntime):
     """One ACP bridge and one Codex App Server process for one attempt."""
 
-    backend_name = "Codex ACP"
+    backend_name = "Codex"
 
     def __init__(
         self,
@@ -60,9 +59,12 @@ class CodexAcpAttemptRuntime(HermesAcpAttemptRuntime):
         )
         self.codex_profile = profile
         self.codex_model = model
+        bridge_python = os.path.abspath(sys.executable)
         super().__init__(
             workspace,
-            hermes_command=sys.executable,
+            acp_command=bridge_python,
+            launch_backend="codex",
+            process_prefix="codex-acp-process",
             profile=None,
             startup_timeout_seconds=startup_timeout_seconds,
             progress_reporter=progress_reporter,
@@ -76,13 +78,15 @@ class CodexAcpAttemptRuntime(HermesAcpAttemptRuntime):
             camofox_base_url=camofox_base_url,
             expected_invocation_id=expected_invocation_id,
         )
+        # Do not resolve a virtual-environment interpreter symlink: the bridge
+        # must retain the environment containing deepresearch_cli.
+        self.acp_command = bridge_python
         # Keep the active virtual-environment launcher. Resolving this symlink
         # to the base interpreter would lose the editable package installation
         # when the bridge process changes cwd to an attempt workspace.
-        self.hermes_command = os.path.abspath(sys.executable)
         self.launch_spec = AcpLaunchSpec(
             backend="codex",
-            command=self.hermes_command,
+            command=bridge_python,
             args=self._acp_args(),
             cwd=self.workspace,
             process_prefix="codex-acp-process",
@@ -101,18 +105,6 @@ class CodexAcpAttemptRuntime(HermesAcpAttemptRuntime):
         if self.codex_model:
             args.extend(["--model", self.codex_model])
         return tuple(args)
-
-    async def start(self) -> None:
-        await super().start()
-        if self._process_instance_id is not None:
-            self._process_instance_id = self._process_instance_id.replace(
-                "hermes-process-", "codex-acp-process-", 1
-            )
-
-    async def invoke(self, invocation: AgentInvocation) -> AgentExecutionResult:
-        result = await super().invoke(invocation)
-        error = result.error.replace("Hermes", "Codex") if result.error else None
-        return dataclasses.replace(result, error=error)
 
     def _notify_invocation_started(self, invocation: AgentInvocation) -> None:
         self._acp_invocation_started(invocation)

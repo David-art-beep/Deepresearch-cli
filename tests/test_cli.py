@@ -261,6 +261,21 @@ def test_sources_can_be_listed_and_described_without_starting_hermes(
     assert described["available"] is True
 
 
+def test_sources_init_creates_stable_user_configuration(
+    tmp_path, capsys, monkeypatch
+):
+    config_home = tmp_path / "user-search"
+    monkeypatch.setenv("DEEPRESEARCH_SEARCH_CONFIG_HOME", str(config_home))
+
+    assert main(["sources", "init", "--json"]) == 0
+    value = json.loads(capsys.readouterr().out)
+    destination = config_home / ".env"
+
+    assert value["status"] == "ready"
+    assert value["path"] == str(destination)
+    assert destination.is_file()
+
+
 def test_domains_can_be_listed_and_described_without_starting_harness(
     tmp_path, capsys
 ):

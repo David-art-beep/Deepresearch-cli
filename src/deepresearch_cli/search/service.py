@@ -345,14 +345,22 @@ class SearchService:
         """
 
         targets: list[psutil.Process] = []
-        for candidate in psutil.process_iter(attrs=["pid"]):
-            if candidate.pid == os.getpid():
-                continue
-            try:
-                if candidate.environ().get(_PROVIDER_INVOCATION_ENV) == marker:
-                    targets.append(candidate)
-            except (psutil.Error, OSError):
-                continue
+        try:
+            candidates = psutil.process_iter(attrs=["pid"])
+            for candidate in candidates:
+                if candidate.pid == os.getpid():
+                    continue
+                try:
+                    if candidate.environ().get(_PROVIDER_INVOCATION_ENV) == marker:
+                        targets.append(candidate)
+                except (psutil.Error, OSError):
+                    continue
+        except (psutil.Error, OSError):
+            # Process enumeration is denied in some sandboxes and managed
+            # desktop environments. Detached-child cleanup is best-effort;
+            # inability to inspect unrelated processes must not turn an
+            # otherwise successful provider call into a search failure.
+            return
         for target in targets:
             try:
                 target.terminate()

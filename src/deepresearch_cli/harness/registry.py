@@ -11,10 +11,12 @@ from .claude_acp import ClaudeAcpBackendFactory
 from .codex_acp import CodexAcpBackendFactory
 from .codex_exec import CodexBackendFactory
 from .hermes_acp import HermesBackendFactory
+from .openclaw_acp import OpenClawAcpBackendFactory
 from .protocol import BackendFactory
 
 
-PRODUCTION_BACKENDS = ("hermes", "codex", "codex-exec", "claude-code")
+ACP_BACKENDS = ("hermes", "codex", "claude-code", "openclaw")
+PRODUCTION_BACKENDS = (*ACP_BACKENDS, "codex-exec")
 
 
 def build_backend_factory(
@@ -85,6 +87,22 @@ def build_backend_factory(
         return ClaudeAcpBackendFactory(
             workspace=workspace,
             claude_acp_command=command,
+            profile=profile,
+            model=model,
+            progress_reporter=progress_reporter,
+            search_mcp_enabled=search_mcp_enabled,
+            search_dir=search_dir,
+            search_provider_python=search_provider_python,
+            search_provider_limit=search_provider_limit,
+            search_coordinator=search_coordinator,
+            camofox_fallback_enabled=camofox_fallback_enabled,
+            camofox_home=camofox_home,
+            camofox_base_url=camofox_base_url,
+        )
+    if backend == "openclaw":
+        return OpenClawAcpBackendFactory(
+            workspace=workspace,
+            openclaw_command=command,
             profile=profile,
             model=model,
             progress_reporter=progress_reporter,

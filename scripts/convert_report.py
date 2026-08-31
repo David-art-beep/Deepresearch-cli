@@ -1,7 +1,7 @@
 """Convert one Markdown report to both Word and PDF.
 
 Usage:
-    uv run python scripts/convert_report.py report/report_01.md
+    .venv/bin/python scripts/convert_report.py report/report_01.md
 """
 
 from __future__ import annotations

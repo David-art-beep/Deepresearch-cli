@@ -60,7 +60,7 @@ def _invocation(workspace: Path, *, timeout=5.0) -> AgentInvocation:
 
 def test_codex_backend_is_registered_and_cli_accepts_its_options(tmp_path):
     assert PRODUCTION_BACKENDS == (
-        "hermes", "codex", "codex-exec", "claude-code"
+        "hermes", "codex", "claude-code", "openclaw", "codex-exec"
     )
     parsed = build_parser().parse_args([
         "research", "topic", "--harness", "codex-exec",

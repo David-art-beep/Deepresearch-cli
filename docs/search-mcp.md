@@ -34,11 +34,12 @@ Agent 决定：
 2. 第一个 Research attempt 到来时，Harness 为整个 run 懒启动一个 Search Coordinator；
    `resume` 会重新启动进程并打开同一个 `runs/<run-id>/search/search.sqlite3`。
 3. 每个 Research NodeInstance attempt 仍创建独立 Agent 进程和 Session；Harness 只向该
-   Session 注入一个轻量 stdio MCP 代理，由代理通过带 token 的 localhost 通道访问 Coordinator。
+   Session 注入一个轻量 stdio MCP 代理，由代理通过带 attempt 专属 token 的 localhost 通道访问
+   Coordinator；token 由 run 根密钥和 namespace 派生，不能改 namespace 后跨 attempt 读取。
 4. Plan、Review、ReportWriter 等节点不会收到这组工具。
 5. Coordinator 统一维护 run 级全局/Domain/Source 并发限制、熔断状态、去重索引和执行缓存；
    同一个 provider/query 即使由并行 d1–d5 提交，也只会执行一次外部请求。
-6. 每个代理使用 attempt namespace。执行结果可在 run 内复用，但分页、详情与异步 batch
+6. 每个代理使用 attempt namespace 和对应的派生凭证。执行结果可在 run 内复用，但分页、详情与异步 batch
    只能读取本 namespace 的 discovery，Research 实例之间不会混入模型可见结果。
 7. Research attempt 结束时删除代理 lease；run 结束或中止时删除 Coordinator lease 并关闭
    进程。父 CLI 异常消失时 watchdog 也会回收 Coordinator。
@@ -252,13 +253,13 @@ Python 模块，适合在新增 YAML 后做配置预检。
 示例：
 
 ```bash
-uv run deepresearch doctor \
+deepresearch doctor \
   --harness hermes \
   --search-dir ./search \
   --search-provider-python /path/to/python \
   --json
 
-uv run deepresearch "比较不同 RAG 评测框架" \
+deepresearch "比较不同 RAG 评测框架" \
   --language zh-CN \
   --mode heavy \
   --report-format formal_report \

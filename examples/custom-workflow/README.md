@@ -11,7 +11,7 @@
 先检查自定义 Node：
 
 ```bash
-uv run deepresearch nodes describe expand-research-plan \
+deepresearch nodes describe expand-research-plan \
   --nodes-dir ./examples/custom-workflow/nodes \
   --json
 ```
@@ -19,7 +19,7 @@ uv run deepresearch nodes describe expand-research-plan \
 再运行完整流程：
 
 ```bash
-uv run deepresearch "研究一个需要多角度交叉验证的问题" \
+deepresearch "研究一个需要多角度交叉验证的问题" \
   --workflow ./examples/custom-workflow/custom-heavy-8.yaml \
   --nodes-dir ./examples/custom-workflow/nodes \
   --mode heavy \

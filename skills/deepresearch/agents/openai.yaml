@@ -1,0 +1,4 @@
+interface:
+  display_name: "DeepResearch"
+  short_description: "安装并运行从搜索到报告交付的 DeepResearch"
+  default_prompt: "使用 $deepresearch 准备环境，确认研究参数，并完成这项深度研究。"

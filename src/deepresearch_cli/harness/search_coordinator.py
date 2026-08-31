@@ -15,6 +15,7 @@ from typing import Optional
 
 from deepresearch_cli.search.paths import builtin_search_dir
 from deepresearch_cli.search.registry import ProviderRegistry, load_search_environment
+from deepresearch_cli.search.coordinator_auth import derive_namespace_token
 
 from .protocol import AgentInvocation, HarnessError
 from .search_mcp import SEARCH_TRANSPORT_ENV_NAMES
@@ -161,6 +162,12 @@ class SearchCoordinatorManager:
         with urllib.request.urlopen(request, timeout=2.0) as response:
             if response.status != 200:
                 raise HarnessError("search coordinator health check failed")
+
+    def credentials(self, namespace: str) -> tuple[str, str]:
+        """Return URL and a credential scoped to one Research attempt."""
+        if not self.url or not self.token:
+            raise HarnessError("run-scoped search coordinator has not started")
+        return self.url, derive_namespace_token(self.token, namespace)
 
     async def close(self) -> None:
         async with self._lock:

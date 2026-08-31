@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import dataclasses
 import os
 import shutil
 from dataclasses import dataclass
@@ -28,8 +27,8 @@ from deepresearch_cli.search.registry import (
 from .acp.client import RecordingAcpClient
 from .acp.launch import AcpLaunchSpec
 from .camofox_fallback import CamofoxFallbackSupport
-from .hermes_acp import HermesAcpAttemptRuntime
-from .protocol import AgentExecutionResult, AgentInvocation, HarnessError
+from .acp_agent import AcpAgentAttemptRuntime
+from .protocol import AgentInvocation, HarnessError
 from .search_mcp import SearchMcpSupport
 
 
@@ -70,7 +69,7 @@ class _ClaudeAcpClient(RecordingAcpClient):
         )
 
 
-class ClaudeAcpAttemptRuntime(HermesAcpAttemptRuntime):
+class ClaudeAcpAttemptRuntime(AcpAgentAttemptRuntime):
     """One claude-agent-acp subprocess serving one DeepResearch attempt."""
 
     backend_name = "Claude Code ACP"
@@ -111,7 +110,9 @@ class ClaudeAcpAttemptRuntime(HermesAcpAttemptRuntime):
         self.claude_model = model
         super().__init__(
             workspace,
-            hermes_command=self.claude_acp_command,
+            acp_command=self.claude_acp_command,
+            launch_backend="claude-code",
+            process_prefix="claude-acp-process",
             profile=None,
             startup_timeout_seconds=startup_timeout_seconds,
             progress_reporter=progress_reporter,
@@ -125,7 +126,6 @@ class ClaudeAcpAttemptRuntime(HermesAcpAttemptRuntime):
             camofox_base_url=camofox_base_url,
             expected_invocation_id=expected_invocation_id,
         )
-        self.hermes_command = self.claude_acp_command
         self._client = _ClaudeAcpClient(
             raw_observer_enabled=True,
             event_observer=self._observe_session_event,
@@ -151,18 +151,6 @@ class ClaudeAcpAttemptRuntime(HermesAcpAttemptRuntime):
 
     def _workspace_edit_mode(self) -> str:
         return "acceptEdits"
-
-    async def start(self) -> None:
-        await super().start()
-        if self._process_instance_id is not None:
-            self._process_instance_id = self._process_instance_id.replace(
-                "hermes-process-", "claude-acp-process-", 1
-            )
-
-    async def invoke(self, invocation: AgentInvocation) -> AgentExecutionResult:
-        result = await super().invoke(invocation)
-        error = result.error.replace("Hermes", "Claude Code") if result.error else None
-        return dataclasses.replace(result, error=error)
 
     def _notify_invocation_started(self, invocation: AgentInvocation) -> None:
         self._acp_invocation_started(invocation)

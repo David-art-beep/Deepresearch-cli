@@ -110,8 +110,6 @@ class SearchMcpSupport:
         selected_lease = (
             lease_file or store_dir.parent / f".{name}.lease"
         ).expanduser().resolve()
-        coordinator_url = getattr(self.coordinator, "url", None)
-        coordinator_token = getattr(self.coordinator, "token", None)
         fetch_env = {"DEEPRESEARCH_FETCH_IDENTITY": identity}
         if self.camofox_fallback_enabled:
             fetch_env.update(
@@ -123,6 +121,12 @@ class SearchMcpSupport:
                 }
             )
         if self.coordinator is not None:
+            credentials = getattr(self.coordinator, "credentials", None)
+            if not callable(credentials):
+                raise HarnessError(
+                    "run-scoped search coordinator does not support attempt credentials"
+                )
+            coordinator_url, coordinator_token = credentials(identity)
             if not coordinator_url or not coordinator_token:
                 raise HarnessError("run-scoped search coordinator has not started")
             return SearchMcpLaunchSpec(
