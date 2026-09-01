@@ -7,7 +7,6 @@ from pathlib import Path
 RENDERER = (
     Path(__file__).resolve().parents[1]
     / "prompts"
-    / "v0.1"
     / "contracts"
     / "renderers"
     / "prepare_citations.py"

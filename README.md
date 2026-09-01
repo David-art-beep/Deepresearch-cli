@@ -1,12 +1,12 @@
 # DeepResearch CLI
 
+[English](README_EN.md) | 简体中文
+
 DeepResearch CLI 用来完成从研究问题到成品报告的完整流程。它会自动拆解问题、并发搜索、整理证据、
 撰写和检查报告，并可导出 Markdown、HTML、PDF 或 DOCX。整个过程在本地运行，可查看进度、保留记录，
 也能在中断后继续，同时复用用户已有的 Hermes、Codex、Claude Code 或 OpenClaw 模型环境。
 
-[GitHub 仓库](https://github.com/David-art-beep/Deepresearch-cli) ·
-[Releases](https://github.com/David-art-beep/Deepresearch-cli/releases) ·
-[命令参考](docs/cli-command-and-workflow-reference.md) ·
+[使用指南](docs/usage-guide.md) ·
 [搜索说明](docs/search-mcp.md)
 
 主要能力：
@@ -34,7 +34,7 @@ Release 提供 npm `.tgz`，其中已经包含同版本的 Python wheel。安装
 `~/.deepresearch-cli/npm-runtime/<version>/` 创建独立环境，不会修改项目目录或系统 Python：
 
 ```bash
-npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.0/david-art-beep-deepresearch-cli-0.1.0.tgz
+npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.1/david-art-beep-deepresearch-cli-0.1.1.tgz
 deepresearch --help
 ```
 
@@ -74,7 +74,7 @@ deepresearch doctor --harness hermes --json
 运行一次正式报告研究：
 
 ```bash
-deepresearch "对比主要国际组织对 2026 年全球经济增长率的预测，并分析差异原因" \
+deepresearch "对比主要国际组织对全球经济增长率的预测，并分析差异原因" \
   --mode normal \
   --report-format formal_report \
   --output-format markdown \
@@ -108,7 +108,7 @@ deepresearch resume <run-id> --harness hermes
 | Heavy | 高要求、长篇或多维度研究 | 增加多轮审查、补研、分章节写作和最终修复 |
 
 三种模式均可调整并发数、搜索来源和输出格式。各模式的完整节点说明见
-[命令与工作流参考](docs/cli-command-and-workflow-reference.md)。
+[使用指南](docs/usage-guide.md)。
 
 ## Web 进度页面
 
@@ -124,14 +124,14 @@ deepresearch web
 也可以直接启动任务：
 
 ```bash
-deepresearch web "分析 2026 年企业级 AI Agent 平台的竞争格局" \
+deepresearch web "分析企业级 AI Agent 平台的竞争格局" \
   --mode heavy \
   --report-format formal_report \
   --output-format pdf \
   --harness hermes
 ```
 
-默认只监听本机地址。需要修改端口或保存目录时：
+默认只监听回环地址。需要修改端口或保存目录时：
 
 ```bash
 deepresearch web \
@@ -228,7 +228,7 @@ steps:
   - report-writer
   - render
 timeouts:
-  research: 1500
+  research: 1800
   report-writer: 600
 result: report
 ```
@@ -241,17 +241,15 @@ deepresearch "研究问题" \
   --harness hermes
 ```
 
-`steps` 表示执行顺序，`timeouts` 的单位是秒。更多节点配置、自定义脚本和输入输出说明见
+`steps` 表示执行顺序，`timeouts` 的单位是秒。Agent 节点首次超时会自动使用全新 Session
+重试当前节点一次；连续两次超时才终止运行。并发节点只重试超时的 scope，已完成结果会保留。
+更多节点配置、自定义脚本和输入输出说明见
 [自定义工作流示例](examples/custom-workflow/README.md) 和 [设计文档](docs/design.md)。
 
 ## 导出 Word 和 PDF
 
-使用 DOCX 前安装 Pandoc，使用 PDF 前安装 Typst：
-
-```bash
-# macOS
-brew install pandoc typst
-```
+使用 DOCX 前安装 Pandoc，使用 PDF 前安装 Typst。请通过对应项目的官方安装方式准备命令行工具，
+并确保 `pandoc` 和 `typst` 可以从 `PATH` 调用。
 
 研究时直接选择输出格式：
 
@@ -279,11 +277,13 @@ python3 -m venv .venv
 .venv/bin/python -m build
 ```
 
-普通测试不会调用真实模型。真实 Harness 测试需要显式设置相应环境变量，可能产生网络请求和费用。
+仓库仅保留发布所需的核心回归测试；这些测试不会调用真实模型或产生外部服务费用。
 
 ## 更多文档
 
-- [完整命令与各模式节点说明](docs/cli-command-and-workflow-reference.md)
+- [文档索引](docs/README.md)
+- [诊断指南](docs/diagnostics.md)
+- [DeepResearch CLI 使用指南](docs/usage-guide.md)
 - [Search MCP 架构与工具说明](docs/search-mcp.md)
 - [运行时设计与扩展方式](docs/design.md)
 - [自定义工作流示例](examples/custom-workflow/README.md)

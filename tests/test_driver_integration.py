@@ -370,7 +370,7 @@ def test_agent_context_includes_resources_and_derived_prompt_view(tmp_path):
     assert research.agent_context["prompt"]["output_path"].endswith("/evidence.json")
     assert "checkpoint_path" not in research.agent_context["prompt"]
     assert "search_materials_path" not in research.agent_context["prompt"]
-    assert research.timeout_seconds == 1500.0
+    assert research.timeout_seconds == 1800.0
     assert set(research.agent_context["resources"]) == {
         "evidence.schema.md",
         "supplement_plan.schema.md",
@@ -424,6 +424,90 @@ def test_failed_node_makes_the_run_terminal(tmp_path):
     assert projection.status == "failed"
     assert "injected failure" in projection.error
     assert not (tmp_path / "output" / projection.run_id).exists()
+
+
+class TimeoutHarness(StubHarness):
+    def __init__(self, *, always_timeout=False, timeout_dimension=None):
+        super().__init__()
+        self.always_timeout = always_timeout
+        self.timeout_dimension = timeout_dimension
+
+    async def invoke(self, invocation):
+        if invocation.node_type == "research":
+            dimension = invocation.agent_context["scope"].get("dimension-id", "d1")
+            prior_timeouts = [
+                item
+                for item in self.invocations
+                if item.node_type == "research"
+                and item.agent_context["scope"].get("dimension-id", "d1") == dimension
+            ]
+            selected = self.timeout_dimension is None or dimension == self.timeout_dimension
+            if selected and (self.always_timeout or not prior_timeouts):
+                self.invocations.append(invocation)
+                return AgentExecutionResult(
+                    status="cancelled",
+                    stop_reason="cancelled",
+                    error=f"Stub invocation timed out after {invocation.timeout_seconds}s",
+                    failure_kind="timeout",
+                )
+        result = await super().invoke(invocation)
+        if invocation.node_type == "plan":
+            path = Path(invocation.agent_context["outputs"]["plan"]["path"])
+            plan = json.loads(path.read_text(encoding="utf-8"))
+            if self.timeout_dimension == "d2":
+                second = json.loads(json.dumps(plan["dimensions"][0]))
+                second.update({"id": "d2", "name": "Second stub dimension"})
+                second["scope_ownership"].update(
+                    {"owns": ["second stub fact"], "overlap_policy": "Only d2 owns it"}
+                )
+                plan["dimensions"].append(second)
+                path.write_text(json.dumps(plan, ensure_ascii=False), encoding="utf-8")
+        return result
+
+
+def test_timed_out_agent_retries_once_with_a_clean_attempt(tmp_path):
+    harness = TimeoutHarness()
+    store, _, _, projection = execute_mode(tmp_path, "quick", harness=harness)
+
+    assert projection.status == "completed"
+    research = [item for item in harness.invocations if item.node_type == "research"]
+    assert [item.attempt for item in research] == [1, 2]
+    assert research[0].invocation_id != research[1].invocation_id
+    assert "# Repair" not in research[1].prompt
+    outcomes = [
+        event["outcome"]
+        for event in store.load_run(projection.run_id).events
+        if event["type"] == "step_finished" and event["node_id"] == "research"
+    ]
+    assert outcomes == ["retryable", "succeeded"]
+
+
+def test_agent_fails_after_two_consecutive_timeouts(tmp_path):
+    harness = TimeoutHarness(always_timeout=True)
+    store, _, _, projection = execute_mode(tmp_path, "quick", harness=harness)
+
+    assert projection.status == "failed"
+    research = [item for item in harness.invocations if item.node_type == "research"]
+    assert [item.attempt for item in research] == [1, 2]
+    outcomes = [
+        event["outcome"]
+        for event in store.load_run(projection.run_id).events
+        if event["type"] == "step_finished" and event["node_id"] == "research"
+    ]
+    assert outcomes == ["retryable", "failed"]
+
+
+def test_timeout_retry_preserves_successful_parallel_scope(tmp_path):
+    harness = TimeoutHarness(timeout_dimension="d2")
+    _, _, _, projection = execute_mode(tmp_path, "normal", harness=harness)
+
+    assert projection.status == "completed"
+    research = [item for item in harness.invocations if item.node_type == "research"]
+    attempts_by_dimension = {}
+    for invocation in research:
+        dimension = invocation.agent_context["scope"]["dimension-id"]
+        attempts_by_dimension.setdefault(dimension, []).append(invocation.attempt)
+    assert attempts_by_dimension == {"d1": [1], "d2": [1, 2]}
 
 
 class InvalidEvidenceHarness(StubHarness):

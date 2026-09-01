@@ -10,7 +10,7 @@ from deepresearch_cli.harness.codex_acp import (
     CodexAcpBackendFactory,
 )
 from deepresearch_cli.harness.codex_acp_bridge.agent import CodexAcpBridgeAgent
-from deepresearch_cli.harness.registry import build_backend_factory
+from deepresearch_cli.harness.registry import PRODUCTION_BACKENDS, build_backend_factory
 
 
 def _write_fake_codex(path: Path, *, stall_turn: bool = False) -> Path:
@@ -71,7 +71,10 @@ def _invocation(workspace: Path, *, timeout: float = 5) -> AgentInvocation:
     )
 
 
-def test_codex_cli_name_selects_acp_and_exec_remains_available(tmp_path):
+def test_codex_cli_name_selects_acp(tmp_path):
+    assert PRODUCTION_BACKENDS == (
+        "hermes", "codex", "claude-code", "openclaw"
+    )
     parsed = build_parser().parse_args(
         [
             "research",
@@ -168,6 +171,7 @@ def test_codex_acp_timeout_interrupts_the_app_server_turn(tmp_path):
     assert result.status == "cancelled"
     assert result.stop_reason == "cancelled"
     assert "Codex invocation timed out" in result.error
+    assert result.failure_kind == "timeout"
 
 
 def test_codex_acp_mcp_secrets_stay_in_the_bridge_config():

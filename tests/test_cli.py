@@ -69,6 +69,15 @@ def test_browser_management_commands_are_exposed():
     assert args.home == Path("/opt/camofox")
 
 
+def test_diagnostics_returns_the_cli_owned_guide_path(capsys):
+    assert main(["diagnostics", "--json"]) == 0
+
+    value = json.loads(capsys.readouterr().out)
+    assert Path(value["path"]).resolve() == (
+        Path(__file__).resolve().parents[1] / "docs" / "diagnostics.md"
+    ).resolve()
+
+
 from deepresearch_cli.config import NodeRegistry, RunRequest, load_workflow_spec
 from deepresearch_cli.driver import ExecutionSessionConfig, WorkflowDriver
 from deepresearch_cli.harness.stub import StubHarness

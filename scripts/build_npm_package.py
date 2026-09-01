@@ -36,9 +36,7 @@ def python_version() -> str:
     if match is None:
         raise RuntimeError("cannot find project version in pyproject.toml")
     version = match.group(1)
-    package_text = (ROOT / "src" / "deepresearch_cli" / "__init__.py").read_text(
-        encoding="utf-8"
-    )
+    package_text = (ROOT / "src" / "__init__.py").read_text(encoding="utf-8")
     package_match = re.search(r'^__version__\s*=\s*"([^"]+)"\s*$', package_text, re.MULTILINE)
     if package_match is None or package_match.group(1) != version:
         found = package_match.group(1) if package_match else "missing"

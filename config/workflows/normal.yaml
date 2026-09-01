@@ -6,8 +6,8 @@ steps:
   - report-writer
   - render
 timeouts:
-  plan: 300
-  research: 1500
+  plan: 600
+  research: 1800
   report-writer: 420
   md-html: 1200
 result: report

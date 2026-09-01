@@ -10,7 +10,7 @@ from deepresearch_cli.harness.stub import StubHarness
 from deepresearch_cli.prompting import PromptBundle
 
 
-PROMPT_DIR = Path(__file__).resolve().parents[1] / "prompts" / "v0.1"
+PROMPT_DIR = Path(__file__).resolve().parents[1] / "prompts"
 
 
 def _load_contract_validator(name):

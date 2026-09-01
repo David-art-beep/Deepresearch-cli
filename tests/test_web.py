@@ -139,6 +139,46 @@ def test_web_rejects_unknown_run(tmp_path):
         assert response.status_code == 404
 
 
+def test_web_result_download_rejects_run_id_directory_traversal(tmp_path):
+    _, run_id = _persisted_run(tmp_path)
+    output_dir = tmp_path / "output"
+    run_output = output_dir / run_id
+    run_output.mkdir(parents=True)
+    (run_output / "report.md").write_text("safe", encoding="utf-8")
+    (tmp_path / "secret.txt").write_text("must not be served", encoding="utf-8")
+    app = create_app(runs_dir=tmp_path / "runs", output_dir=output_dir)
+
+    with TestClient(app) as client:
+        valid = client.get(f"/api/runs/{run_id}/files/report.md")
+        traversal = client.get("/api/runs/%2E%2E/files/secret.txt")
+
+    assert valid.status_code == 200
+    assert valid.text == "safe"
+    assert traversal.status_code == 400
+    assert "must not be served" not in traversal.text
+
+
+def test_web_result_download_rejects_symlinks(tmp_path):
+    _, run_id = _persisted_run(tmp_path)
+    output_dir = tmp_path / "output"
+    run_output = output_dir / run_id
+    run_output.mkdir(parents=True)
+    secret = tmp_path / "secret.txt"
+    secret.write_text("must not be served", encoding="utf-8")
+    link = run_output / "report.md"
+    try:
+        link.symlink_to(secret)
+    except OSError:
+        return
+    app = create_app(runs_dir=tmp_path / "runs", output_dir=output_dir)
+
+    with TestClient(app) as client:
+        response = client.get(f"/api/runs/{run_id}/files/report.md")
+
+    assert response.status_code == 404
+    assert "must not be served" not in response.text
+
+
 def test_web_does_not_offer_ambiguous_resume_endpoint(tmp_path):
     _, run_id = _persisted_run(tmp_path)
     app = create_app(runs_dir=tmp_path / "runs", output_dir=tmp_path / "output")

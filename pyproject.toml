@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepresearch-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "A configuration-first runtime for DeepResearch workflows"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,11 +35,24 @@ deepresearch = "deepresearch_cli.cli:main"
 deepresearch-search-mcp = "deepresearch_cli.search.mcp_server:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = {"deepresearch_cli" = "src"}
+packages = [
+  "deepresearch_cli",
+  "deepresearch_cli.config",
+  "deepresearch_cli.converters",
+  "deepresearch_cli.harness",
+  "deepresearch_cli.harness.acp",
+  "deepresearch_cli.harness.codex_acp_bridge",
+  "deepresearch_cli.node_validators",
+  "deepresearch_cli.persistence",
+  "deepresearch_cli.prompting",
+  "deepresearch_cli.search",
+  "deepresearch_cli.search.adapters",
+  "deepresearch_cli.search.registry",
+  "deepresearch_cli.search.results",
+  "deepresearch_cli.web",
+]
 include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.setuptools.data-files]
 "share/deepresearch-cli/config/workflows" = [
@@ -62,6 +75,9 @@ where = ["src"]
   "assets/web/*.css",
   "assets/web/*.js",
 ]
+"share/deepresearch-cli/docs" = [
+  "docs/*.md",
+]
 "share/deepresearch-cli/search" = [
   "search/README.md",
   "search/.env.example",
@@ -78,45 +94,32 @@ where = ["src"]
 "share/deepresearch-cli/search/providers/academic" = [
   "search/providers/academic/*.py",
 ]
-"share/deepresearch-cli/prompts/v0.1" = [
-  "prompts/v0.1/*.md",
-  "prompts/v0.1/*.json",
+"share/deepresearch-cli/prompts" = [
+  "prompts/*.md",
+  "prompts/*.json",
 ]
-"share/deepresearch-cli/prompts/v0.1/contracts/schemas" = [
-  "prompts/v0.1/contracts/schemas/briefing.schema.md",
-  "prompts/v0.1/contracts/schemas/evidence.schema.md",
-  "prompts/v0.1/contracts/schemas/outline.schema.md",
-  "prompts/v0.1/contracts/schemas/perspective_feedback.schema.md",
-  "prompts/v0.1/contracts/schemas/plan.schema.md",
-  "prompts/v0.1/contracts/schemas/supplement_plan.schema.md",
+"share/deepresearch-cli/prompts/contracts/schemas" = [
+  "prompts/contracts/schemas/briefing.schema.md",
+  "prompts/contracts/schemas/evidence.schema.md",
+  "prompts/contracts/schemas/outline.schema.md",
+  "prompts/contracts/schemas/perspective_feedback.schema.md",
+  "prompts/contracts/schemas/plan.schema.md",
+  "prompts/contracts/schemas/supplement_plan.schema.md",
 ]
-"share/deepresearch-cli/prompts/v0.1/contracts/validators" = [
-  "prompts/v0.1/contracts/validators/validate_briefing.py",
-  "prompts/v0.1/contracts/validators/validate_evidence.py",
-  "prompts/v0.1/contracts/validators/validate_outline.py",
-  "prompts/v0.1/contracts/validators/validate_plan.py",
-  "prompts/v0.1/contracts/validators/validate_supplement_plan.py",
+"share/deepresearch-cli/prompts/contracts/validators" = [
+  "prompts/contracts/validators/validate_briefing.py",
+  "prompts/contracts/validators/validate_evidence.py",
+  "prompts/contracts/validators/validate_outline.py",
+  "prompts/contracts/validators/validate_plan.py",
+  "prompts/contracts/validators/validate_supplement_plan.py",
 ]
-"share/deepresearch-cli/prompts/v0.1/contracts/materializers" = [
-  "prompts/v0.1/contracts/materializers/derive_research_tasks.py",
-  "prompts/v0.1/contracts/materializers/derive_content_tasks.py",
+"share/deepresearch-cli/prompts/contracts/materializers" = [
+  "prompts/contracts/materializers/derive_research_tasks.py",
+  "prompts/contracts/materializers/derive_content_tasks.py",
 ]
-"share/deepresearch-cli/prompts/v0.1/contracts/renderers" = [
-  "prompts/v0.1/contracts/renderers/prepare_citations.py",
+"share/deepresearch-cli/prompts/contracts/renderers" = [
+  "prompts/contracts/renderers/prepare_citations.py",
 ]
-"share/deepresearch-cli/skills/deepresearch" = [
-  "skills/deepresearch/SKILL.md",
-]
-"share/deepresearch-cli/skills/deepresearch/agents" = [
-  "skills/deepresearch/agents/openai.yaml",
-]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-markers = [
-  "live_hermes: opt-in acceptance against the installed Hermes ACP and configured model provider",
-  "live_codex: opt-in acceptance against the installed Codex ACP bridge and configured model provider",
-  "live_claude: opt-in acceptance against the installed Claude Code ACP adapter and configured model provider",
-  "live_openclaw: opt-in acceptance against the installed OpenClaw ACP endpoint and configured Gateway",
-]

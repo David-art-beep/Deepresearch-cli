@@ -649,6 +649,7 @@ def test_timeout_attempts_acp_cancel_and_returns_cancelled(tmp_path):
         assert result.native_process_instance_id == "hermes-process-test"
         assert result.native_process_stderr_path is not None
         assert result.native_session_id == "session-timeout"
+        assert result.failure_kind == "timeout"
         assert cancelled_sessions == ["session-timeout"]
 
     asyncio.run(exercise())

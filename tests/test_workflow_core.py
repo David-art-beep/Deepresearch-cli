@@ -75,7 +75,7 @@ def test_quick_workflow_is_a_plain_ordered_yaml_list():
     assert compiled.result_type == "report"
     assert compiled.result_media_type == "text/markdown"
     assert {item.step_id: item.timeout_seconds for item in compiled.steps} == {
-        "research": 1500.0,
+        "research": 1800.0,
         "report-writer": 300.0,
         "render": None,
     }
@@ -108,8 +108,8 @@ def test_repeating_yaml_nodes_builds_the_second_research_cycle():
     ]
     research_2 = next(item for item in compiled.steps if item.step_id == "research-2")
     research_1 = next(item for item in compiled.steps if item.step_id == "research")
-    assert research_1.timeout_seconds == 1500.0
-    assert research_2.timeout_seconds == 1500.0
+    assert research_1.timeout_seconds == 1800.0
+    assert research_2.timeout_seconds == 1800.0
     task = next(item for item in research_2.bindings if item.port == "task")
     assert task.mode == "each"
     assert task.source_step_id == "supplement-planner"
@@ -265,8 +265,8 @@ def test_compiled_workflow_round_trip_preserves_step_timeouts():
     restored = CompiledWorkflow.from_dict(compiled.to_dict())
 
     assert [item.timeout_seconds for item in restored.steps] == [
-        300.0,
-        1500.0,
+        600.0,
+        1800.0,
         420.0,
         None,
     ]

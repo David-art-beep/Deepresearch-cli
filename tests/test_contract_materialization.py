@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_outline_validator():
-    path = ROOT / "prompts/v0.1/contracts/validators/validate_outline.py"
+    path = ROOT / "prompts/contracts/validators/validate_outline.py"
     spec = importlib.util.spec_from_file_location("formal_outline_validator", path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
