@@ -34,7 +34,7 @@ Release 提供 npm `.tgz`，其中已经包含同版本的 Python wheel。安装
 `~/.deepresearch-cli/npm-runtime/<version>/` 创建独立环境，不会修改项目目录或系统 Python：
 
 ```bash
-npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.7/david-art-beep-deepresearch-cli-0.1.7.tgz
+npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.8/david-art-beep-deepresearch-cli-0.1.8.tgz
 deepresearch --help
 ```
 

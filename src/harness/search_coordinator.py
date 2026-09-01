@@ -9,6 +9,7 @@ import os
 import secrets
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Optional
@@ -47,6 +48,7 @@ class SearchCoordinatorManager:
         self._process: Optional[asyncio.subprocess.Process] = None
         self._stderr_file = None
         self._lock = asyncio.Lock()
+        self._start_task: Optional[asyncio.Task[None]] = None
 
     @property
     def root(self) -> Path:
@@ -57,12 +59,27 @@ class SearchCoordinatorManager:
             raise HarnessError("search coordinator run id does not match invocation")
         async with self._lock:
             if self._process is not None and self._process.returncode is None:
+                if self.url:
+                    return
+                task = self._start_task
+            else:
+                task = None
+            if task is None:
+                self._start_task = asyncio.create_task(self._start_once(invocation))
+                task = self._start_task
+        await task
+
+    async def _start_once(self, invocation: AgentInvocation) -> None:
+        """Start one coordinator and let all concurrent callers await it."""
+        async with self._lock:
+            if self._process is not None and self._process.returncode is None and self.url:
                 return
             self.root.mkdir(parents=True, exist_ok=True)
             lease = self.root / ".coordinator.lease"
             ready = self.root / ".coordinator.ready.json"
-            with contextlib.suppress(OSError):
-                ready.unlink()
+            if self._process is None or self._process.returncode is not None:
+                with contextlib.suppress(OSError):
+                    ready.unlink()
             lease.write_text("active\n", encoding="utf-8")
             self.token = secrets.token_urlsafe(32)
             environment = load_search_environment(
@@ -121,7 +138,7 @@ class SearchCoordinatorManager:
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=self._stderr_file,
             )
-            deadline = time.monotonic() + 15.0
+            deadline = time.monotonic() + 30.0
             while time.monotonic() < deadline:
                 if self._process.returncode is not None:
                     break
@@ -130,9 +147,11 @@ class SearchCoordinatorManager:
                         value = json.loads(ready.read_text(encoding="utf-8"))
                         self.url = str(value["url"])
                         await asyncio.to_thread(self._health)
+                        self._start_task = None
                         return
-                    except (OSError, KeyError, ValueError, json.JSONDecodeError):
-                        pass
+                    except (OSError, KeyError, ValueError, json.JSONDecodeError, urllib.error.URLError):
+                        await asyncio.sleep(0.1)
+                        continue
                 await asyncio.sleep(0.05)
             with contextlib.suppress(OSError):
                 lease.unlink()
@@ -170,6 +189,11 @@ class SearchCoordinatorManager:
         return self.url, derive_namespace_token(self.token, namespace)
 
     async def close(self) -> None:
+        start_task = self._start_task
+        if start_task is not None and not start_task.done():
+            start_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await start_task
         async with self._lock:
             lease = self.root / ".coordinator.lease"
             with contextlib.suppress(OSError):
@@ -183,6 +207,7 @@ class SearchCoordinatorManager:
                     process.kill()
                     await process.wait()
             self._process = None
+            self._start_task = None
             self.url = None
             self.token = None
             if self._stderr_file is not None:

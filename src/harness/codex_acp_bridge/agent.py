@@ -74,7 +74,7 @@ class CodexAcpBridgeAgent:
             agent_info=Implementation(
                 name="deepresearch-codex-acp",
                 title="DeepResearch Codex ACP Bridge",
-                version="0.1.7",
+                version="0.1.8",
             ),
         )
 

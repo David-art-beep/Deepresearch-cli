@@ -63,7 +63,7 @@ class CodexAppServerClient:
                 "clientInfo": {
                     "name": "deepresearch_cli",
                     "title": "DeepResearch CLI Codex ACP Bridge",
-                    "version": "0.1.7",
+                    "version": "0.1.8",
                 }
             },
         )
