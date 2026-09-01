@@ -1,6 +1,6 @@
 {
   "name": "@david-art-beep/deepresearch-cli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "npm installer and launcher for the DeepResearch Python CLI",
   "license": "UNLICENSED",
   "repository": {

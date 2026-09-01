@@ -446,6 +446,22 @@ class OpenClawAcpBackendFactory:
     async def _workspace_permissions(self) -> Mapping[str, Any]:
         """Validate the non-interactive Agent workspace contract before a Run."""
 
+        agents_code, agents_out, agents_err = await self._run("agents", "list", "--json")
+        if agents_code:
+            raise HarnessError(agents_err or agents_out or "OpenClaw agent list failed")
+        try:
+            agents = json.loads(agents_out)
+        except (TypeError, ValueError) as exc:
+            raise HarnessError(f"OpenClaw agent list is not valid JSON: {agents_out}") from exc
+        if not isinstance(agents, list) or not agents:
+            raise HarnessError("OpenClaw has no configured Agent for DeepResearch")
+        selected = next((a for a in agents if isinstance(a, Mapping) and a.get("isDefault")), None)
+        selected = selected or next((a for a in agents if isinstance(a, Mapping)), None)
+        agent_id = str(selected.get("id") or "").strip() if isinstance(selected, Mapping) else ""
+        if not agent_id:
+            raise HarnessError("OpenClaw agent list has no usable Agent id")
+        prefix = f"agents.entries.{agent_id}"
+
         def parse_config(path: str, output: str, error: str) -> Any:
             try:
                 value = json.loads(output)
@@ -461,20 +477,20 @@ class OpenClawAcpBackendFactory:
             return value
 
         sandbox_code, sandbox_out, sandbox_err = await self._run(
-            "config", "get", "agents.entries.main.sandbox", "--json"
+            "config", "get", f"{prefix}.sandbox", "--json"
         )
         if sandbox_code:
             raise HarnessError(
-                "OpenClaw main Agent workspace permission check failed. "
-                "Set agents.entries.main.sandbox.workspaceAccess to rw (or use "
+                f"OpenClaw Agent {agent_id} workspace permission check failed. "
+                f"Set {prefix}.sandbox.workspaceAccess to rw (or use "
                 "an unsandboxed workspace), then retry."
             )
         sandbox = parse_config(
-            "agents.entries.main.sandbox", sandbox_out, sandbox_err
+            f"{prefix}.sandbox", sandbox_out, sandbox_err
         )
         if not isinstance(sandbox, Mapping):
             raise HarnessError(
-                "OpenClaw agents.entries.main.sandbox must be an object with "
+                f"OpenClaw {prefix}.sandbox must be an object with "
                 "workspaceAccess=rw or mode=off"
             )
         workspace_access = sandbox.get("workspaceAccess")
@@ -482,24 +498,24 @@ class OpenClawAcpBackendFactory:
         writable_workspace = workspace_access == "rw" or sandbox_mode == "off"
         if not writable_workspace:
             raise HarnessError(
-                "OpenClaw main Agent workspace is not writable. Set "
-                "agents.entries.main.sandbox.workspaceAccess to rw, or use "
+                f"OpenClaw Agent {agent_id} workspace is not writable. Set "
+                f"{prefix}.sandbox.workspaceAccess to rw, or use "
                 "mode=off for a trusted unsandboxed workspace."
             )
 
         tools_code, tools_out, tools_err = await self._run(
-            "config", "get", "agents.entries.main.tools", "--json"
+            "config", "get", f"{prefix}.tools", "--json"
         )
         if tools_code:
             raise HarnessError(
-                "OpenClaw main Agent tool permission check failed. "
+                f"OpenClaw Agent {agent_id} tool permission check failed. "
                 "Allow read, write, edit, apply_patch, exec and process for "
                 "the Agent before starting DeepResearch."
             )
-        tools = parse_config("agents.entries.main.tools", tools_out, tools_err)
+        tools = parse_config(f"{prefix}.tools", tools_out, tools_err)
         if not isinstance(tools, Mapping):
             raise HarnessError(
-                "OpenClaw agents.entries.main.tools must be an object with an allow list"
+                f"OpenClaw {prefix}.tools must be an object with an allow list"
             )
         allowed = {
             item
@@ -520,11 +536,11 @@ class OpenClawAcpBackendFactory:
             if blocked:
                 details.append("denied=" + ",".join(blocked))
             raise HarnessError(
-                "OpenClaw main Agent lacks DeepResearch tools (" + "; ".join(details) + "). "
-                "Update agents.entries.main.tools before starting DeepResearch."
+                f"OpenClaw Agent {agent_id} lacks DeepResearch tools (" + "; ".join(details) + "). "
+                f"Update {prefix}.tools before starting DeepResearch."
             )
         return {
-            "agent": "main",
+            "agent": agent_id,
             "workspace_access": "rw" if workspace_access == "rw" else "host",
             "sandbox_mode": sandbox_mode,
             "required_tools": sorted(required),

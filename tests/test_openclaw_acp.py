@@ -50,6 +50,7 @@ def _write_fake_openclaw(path: Path) -> Path:
         "#!/bin/sh\n"
         "if [ \"$1\" = \"--version\" ]; then echo 'OpenClaw 1.2.3'; exit 0; fi\n"
         "if [ \"$1\" = \"status\" ]; then echo '{\"gateway\":\"ok\"}'; exit 0; fi\n"
+        "if [ \"$1\" = \"agents\" ] && [ \"$2\" = \"list\" ]; then echo '[{\"id\":\"main\",\"isDefault\":true}]'; exit 0; fi\n"
         "if [ \"$1\" = \"config\" ] && [ \"$2\" = \"get\" ]; then\n"
         "  case \"$3\" in\n"
         "    agents.entries.main.sandbox) echo '{\"mode\":\"off\",\"workspaceAccess\":\"rw\"}' ;;\n"

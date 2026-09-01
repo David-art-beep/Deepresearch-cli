@@ -22,8 +22,8 @@ test("runtime paths are versioned and support an explicit home", () => {
   const environment = { DEEPRESEARCH_NPM_RUNTIME_HOME: "/tmp/dr-runtime" };
   assert.equal(runtimeRoot(environment), path.resolve("/tmp/dr-runtime"));
   assert.equal(
-    runtimeDirectory("0.1.3", environment),
-    path.join(path.resolve("/tmp/dr-runtime"), "0.1.3")
+    runtimeDirectory("0.1.4", environment),
+    path.join(path.resolve("/tmp/dr-runtime"), "0.1.4")
   );
 });
 
