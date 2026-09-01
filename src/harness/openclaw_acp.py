@@ -10,6 +10,8 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Optional
@@ -547,18 +549,46 @@ class OpenClawAcpBackendFactory:
         }
 
     async def probe(self) -> Mapping[str, Any]:
-        runtime = self._runtime()
+        self.workspace.mkdir(parents=True, exist_ok=True)
+        probe_dir = Path(tempfile.mkdtemp(prefix=".openclaw-write-probe-", dir=self.workspace))
+        marker = probe_dir / "write-probe.txt"
+        invocation_id = "openclaw-write-probe-" + uuid.uuid4().hex[:10]
+        runtime = self._runtime(expected_invocation_id=invocation_id)
         try:
-            await runtime.start()
+            result = await runtime.invoke(AgentInvocation(
+                invocation_id=invocation_id,
+                run_id="preflight",
+                node_instance_id="openclaw-write-probe",
+                node_type="preflight",
+                attempt=1,
+                workspace=probe_dir,
+                input_artifact_refs=[],
+                resolved_input_artifacts=[],
+                timeout_seconds=60,
+                agent_context={},
+                prompt=(
+                    "Use the native write tool to create exactly this UTF-8 text file: "
+                    f"{marker}. Its complete content must be: deepresearch-write-ok. "
+                    "Do not use exec, shell commands, redirection, or scripts."
+                ),
+                allow_workspace_edits=True,
+            ))
+            if result.status != "succeeded" or not marker.is_file() or marker.read_text(encoding="utf-8").strip() != "deepresearch-write-ok":
+                raise HarnessError(
+                    "OpenClaw ACP write smoke test failed: the child session could not "
+                    "create a file in the current Run workspace. Check the selected "
+                    "Agent's write/edit tool exposure and permission flow before retrying."
+                )
             return {
                 "acp_initialize": "ok",
-                "model_check": "not_run",
+                "model_check": "workspace-write-ok",
                 "search_mcp": (
                     "openclaw-exec-bridge" if self.search_mcp_enabled else "disabled"
                 ),
             }
         finally:
             await _shielded_runtime_close(runtime)
+            shutil.rmtree(probe_dir, ignore_errors=True)
 
     def create(self, invocation: AgentInvocation) -> OpenClawAcpAttemptRuntime:
         return self._runtime(expected_invocation_id=invocation.invocation_id)
