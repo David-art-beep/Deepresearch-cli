@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-import re
 from typing import Any, Mapping
 
 from deepresearch_cli.config import CompiledWorkflow
@@ -44,20 +43,6 @@ _STEP_LABELS = {
     "md-pdf": "生成 PDF",
     "md-docx": "生成 Word",
 }
-
-
-def display_query_title(query: str, *, limit: int = 32) -> str:
-    """Create a compact UI title without changing the stored research query."""
-    text = re.sub(r"\s+", " ", str(query or "")).strip()
-    if not text:
-        return "正在读取研究任务"
-    # Requirements after the first sentence make poor dashboard titles.
-    for marker in ("。", "；", ";", "，要求", ",要求", "\n"):
-        if marker in text:
-            text = text.split(marker, 1)[0].strip()
-            break
-    text = re.sub(r"^(研究|分析)\s*", "", text).strip() or text
-    return text if len(text) <= limit else text[:limit].rstrip() + "…"
 
 
 def _generic_web_progress(projection) -> dict[str, Any]:
@@ -269,7 +254,6 @@ def build_run_snapshot(store: RunStore, run_id: str, *, output_dir: Path) -> dic
         "progress": web_progress,
         "result": result,
         "query": context.get("query", ""),
-        "display_title": display_query_title(context.get("query", "")),
         "language": context.get("language", "zh-CN"),
         "mode": context.get("mode", workflow.name),
         "report_format": context.get("report_format", "formal_report"),

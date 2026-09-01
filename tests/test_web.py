@@ -5,15 +5,7 @@ from starlette.testclient import TestClient
 from deepresearch_cli.config import CompiledWorkflow
 from deepresearch_cli.persistence import RunStore
 from deepresearch_cli.web.app import create_app
-from deepresearch_cli.web.snapshot import build_run_snapshot, display_query_title
-
-
-def test_display_query_title_is_compact_and_preserves_query():
-    query = "研究分析2005-2025年期间全球央行和中国央行的黄金购买量数据以及历史趋势和关键转折点。要求使用权威数据源"
-    title = display_query_title(query)
-    assert title.startswith("分析2005-2025年期间全球央行和中国央行")
-    assert title.endswith("…")
-    assert len(title) <= 33
+from deepresearch_cli.web.snapshot import build_run_snapshot
 
 
 class _FakeManager:
