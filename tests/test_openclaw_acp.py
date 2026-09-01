@@ -137,7 +137,9 @@ def test_openclaw_rejects_unsupported_per_session_model_override(tmp_path: Path)
 
 def test_openclaw_allows_only_exact_attempt_search_bridge_exec(tmp_path: Path) -> None:
     context = (tmp_path / "attempt.json").resolve()
-    client = _OpenClawAcpClient(allowed_contexts={"attempt": context})
+    client = _OpenClawAcpClient(
+        allowed_contexts={"attempt": context}, workspace_root=tmp_path
+    )
     options = [
         SimpleNamespace(kind="allow_once", option_id="allow"),
         SimpleNamespace(kind="reject_once", option_id="reject"),
@@ -189,6 +191,29 @@ def test_openclaw_allows_only_exact_attempt_search_bridge_exec(tmp_path: Path) -
     assert allowed.outcome.option_id == "allow"
     assert injected.outcome.option_id == "reject"
     assert wrong_context.outcome.option_id == "reject"
+
+    write = asyncio.run(
+        client.request_permission(
+            options,
+            "session",
+            SimpleNamespace(
+                kind="write",
+                raw_input={"file_path": str(tmp_path / "staging" / "plan.json")},
+            ),
+        )
+    )
+    outside = asyncio.run(
+        client.request_permission(
+            options,
+            "session",
+            SimpleNamespace(
+                kind="write",
+                raw_input={"file_path": str(tmp_path.parent / "plan.json")},
+            ),
+        )
+    )
+    assert write.outcome.option_id == "allow"
+    assert outside.outcome.option_id == "reject"
 
 
 def test_openclaw_invocation_omits_session_mcp_and_edit_mode(tmp_path: Path) -> None:

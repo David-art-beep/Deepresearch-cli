@@ -48,9 +48,16 @@ def _tool_call_value(tool_call: Any, name: str) -> Any:
 class _OpenClawAcpClient(RecordingAcpClient):
     """Allow only the exact per-attempt Search bridge exec command."""
 
-    def __init__(self, *, allowed_contexts: Mapping[str, Path], **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        allowed_contexts: Mapping[str, Path],
+        workspace_root: Path,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self._allowed_contexts = allowed_contexts
+        self._workspace_root = workspace_root.resolve()
 
     def _authorized(self, tool_call: Any) -> bool:
         if _tool_call_value(tool_call, "kind") != "execute":
@@ -77,6 +84,27 @@ class _OpenClawAcpClient(RecordingAcpClient):
         allowed = {path.resolve() for path in self._allowed_contexts.values()}
         return supplied_context in allowed and argv[5] in _SEARCH_BRIDGE_OPERATIONS
 
+    def _authorized_workspace_edit(self, tool_call: Any) -> bool:
+        """Allow native file mutations only inside this CLI workspace."""
+        kind = _tool_call_value(tool_call, "kind")
+        if kind not in {"write", "edit", "apply_patch"}:
+            return False
+        raw = _tool_call_value(tool_call, "raw_input")
+        if raw is None:
+            raw = _tool_call_value(tool_call, "rawInput")
+        if not isinstance(raw, Mapping):
+            return False
+        # write/edit expose a target path. apply_patch is accepted only when
+        # the ACP payload includes an explicit target path as well.
+        target = raw.get("file_path") or raw.get("path") or raw.get("filename")
+        if not isinstance(target, str):
+            return False
+        try:
+            path = Path(target).expanduser().resolve()
+        except OSError:
+            return False
+        return path == self._workspace_root or self._workspace_root in path.parents
+
     async def request_permission(
         self,
         options: list[Any],
@@ -85,7 +113,7 @@ class _OpenClawAcpClient(RecordingAcpClient):
         **kwargs: Any,
     ) -> RequestPermissionResponse:
         del kwargs
-        if self._authorized(tool_call):
+        if self._authorized(tool_call) or self._authorized_workspace_edit(tool_call):
             selected = next(
                 (option for option in options if option.kind == "allow_once"), None
             )
@@ -158,6 +186,7 @@ class OpenClawAcpAttemptRuntime(AcpAgentAttemptRuntime):
         )
         self._client = _OpenClawAcpClient(
             allowed_contexts=self._search_contexts,
+            workspace_root=self.workspace,
             raw_observer_enabled=True,
             event_observer=self._observe_session_event,
         )
