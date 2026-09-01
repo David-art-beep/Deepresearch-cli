@@ -226,7 +226,7 @@ function dashboard(s, connected = false) {
       </header>
       <div class="dashboard-shell">
         <aside class="status-sidebar">
-          <header><span class="eyebrow">研究状态</span><h1>${esc(s.query || '正在读取研究任务')}</h1></header>
+          <header><span class="eyebrow">研究状态</span><h1 title="${esc(s.query || '')}">${esc(s.display_title || s.query || '正在读取研究任务')}</h1></header>
           <div class="status-content">
             <div class="status-meta"><span>研究模式</span><strong>${esc(String(s.mode || 'heavy').toUpperCase())}</strong></div>
             <div class="status-meta"><span>报告形式</span><strong>${esc(reportFormatName[s.report_format] || s.report_format || '正式报告')}</strong></div>

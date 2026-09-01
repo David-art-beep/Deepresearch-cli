@@ -42,7 +42,7 @@ The npm archive contains the matching Python wheel. Installation creates an isol
 Python environment.
 
 ```bash
-npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.4/david-art-beep-deepresearch-cli-0.1.4.tgz
+npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.5/david-art-beep-deepresearch-cli-0.1.5.tgz
 deepresearch --help
 ```
 
