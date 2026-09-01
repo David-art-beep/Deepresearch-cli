@@ -50,6 +50,14 @@ def _write_fake_openclaw(path: Path) -> Path:
         "#!/bin/sh\n"
         "if [ \"$1\" = \"--version\" ]; then echo 'OpenClaw 1.2.3'; exit 0; fi\n"
         "if [ \"$1\" = \"status\" ]; then echo '{\"gateway\":\"ok\"}'; exit 0; fi\n"
+        "if [ \"$1\" = \"config\" ] && [ \"$2\" = \"get\" ]; then\n"
+        "  case \"$3\" in\n"
+        "    agents.entries.main.sandbox) echo '{\"mode\":\"off\",\"workspaceAccess\":\"rw\"}' ;;\n"
+        "    agents.entries.main.tools) echo '{\"allow\":[\"read\",\"write\",\"edit\",\"apply_patch\",\"exec\",\"process\"]}' ;;\n"
+        "    *) exit 2 ;;\n"
+        "  esac\n"
+        "  exit 0\n"
+        "fi\n"
         "exit 2\n",
         encoding="utf-8",
     )
@@ -85,6 +93,10 @@ def test_openclaw_preflight_checks_gateway_without_model_call(tmp_path: Path) ->
     assert report["transport"] == "acp"
     assert report["bridge"] == "openclaw-gateway"
     assert report["model"] == "configured-by-openclaw-agent"
+    assert report["workspace_permissions"]["workspace_access"] == "rw"
+    assert set(report["workspace_permissions"]["required_tools"]) == {
+        "read", "write", "edit", "apply_patch", "exec", "process"
+    }
 
 
 def test_openclaw_search_bridge_is_attempt_scoped_and_removed(tmp_path: Path) -> None:

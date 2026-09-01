@@ -374,6 +374,8 @@ class OpenClawAcpBackendFactory:
             "model": "configured-by-openclaw-agent",
             "ok": True,
         }
+        workspace_permissions = await self._workspace_permissions()
+        report["workspace_permissions"] = workspace_permissions
         if self.search_mcp_enabled:
             support = SearchMcpSupport(
                 search_dir=self.search_dir,
@@ -411,6 +413,93 @@ class OpenClawAcpBackendFactory:
             base_url=self.camofox_base_url,
         ).report())
         return report
+
+    async def _workspace_permissions(self) -> Mapping[str, Any]:
+        """Validate the non-interactive Agent workspace contract before a Run."""
+
+        def parse_config(path: str, output: str, error: str) -> Any:
+            try:
+                value = json.loads(output)
+            except (TypeError, ValueError) as exc:
+                raise HarnessError(
+                    f"OpenClaw config {path} is not valid JSON: {error or output}"
+                ) from exc
+            if isinstance(value, Mapping) and value.get("ok") is False:
+                raise HarnessError(
+                    f"OpenClaw config {path} is unavailable: "
+                    f"{value.get('error', {}).get('message', 'unknown error')}"
+                )
+            return value
+
+        sandbox_code, sandbox_out, sandbox_err = await self._run(
+            "config", "get", "agents.entries.main.sandbox", "--json"
+        )
+        if sandbox_code:
+            raise HarnessError(
+                "OpenClaw main Agent workspace permission check failed. "
+                "Set agents.entries.main.sandbox.workspaceAccess to rw (or use "
+                "an unsandboxed workspace), then retry."
+            )
+        sandbox = parse_config(
+            "agents.entries.main.sandbox", sandbox_out, sandbox_err
+        )
+        if not isinstance(sandbox, Mapping):
+            raise HarnessError(
+                "OpenClaw agents.entries.main.sandbox must be an object with "
+                "workspaceAccess=rw or mode=off"
+            )
+        workspace_access = sandbox.get("workspaceAccess")
+        sandbox_mode = sandbox.get("mode")
+        writable_workspace = workspace_access == "rw" or sandbox_mode == "off"
+        if not writable_workspace:
+            raise HarnessError(
+                "OpenClaw main Agent workspace is not writable. Set "
+                "agents.entries.main.sandbox.workspaceAccess to rw, or use "
+                "mode=off for a trusted unsandboxed workspace."
+            )
+
+        tools_code, tools_out, tools_err = await self._run(
+            "config", "get", "agents.entries.main.tools", "--json"
+        )
+        if tools_code:
+            raise HarnessError(
+                "OpenClaw main Agent tool permission check failed. "
+                "Allow read, write, edit, apply_patch, exec and process for "
+                "the Agent before starting DeepResearch."
+            )
+        tools = parse_config("agents.entries.main.tools", tools_out, tools_err)
+        if not isinstance(tools, Mapping):
+            raise HarnessError(
+                "OpenClaw agents.entries.main.tools must be an object with an allow list"
+            )
+        allowed = {
+            item
+            for key in ("allow", "alsoAllow")
+            for item in tools.get(key, [])
+            if isinstance(item, str)
+        }
+        denied = {
+            item for item in tools.get("deny", []) if isinstance(item, str)
+        }
+        required = {"read", "write", "edit", "apply_patch", "exec", "process"}
+        missing = sorted(required - allowed)
+        blocked = sorted(required & denied)
+        if missing or blocked:
+            details = []
+            if missing:
+                details.append("missing=" + ",".join(missing))
+            if blocked:
+                details.append("denied=" + ",".join(blocked))
+            raise HarnessError(
+                "OpenClaw main Agent lacks DeepResearch tools (" + "; ".join(details) + "). "
+                "Update agents.entries.main.tools before starting DeepResearch."
+            )
+        return {
+            "agent": "main",
+            "workspace_access": "rw" if workspace_access == "rw" else "host",
+            "sandbox_mode": sandbox_mode,
+            "required_tools": sorted(required),
+        }
 
     async def probe(self) -> Mapping[str, Any]:
         runtime = self._runtime()
