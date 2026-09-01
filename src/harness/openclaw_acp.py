@@ -555,6 +555,7 @@ class OpenClawAcpBackendFactory:
         invocation_id = "openclaw-write-probe-" + uuid.uuid4().hex[:10]
         runtime = self._runtime(expected_invocation_id=invocation_id)
         try:
+            await runtime.start()
             result = await runtime.invoke(AgentInvocation(
                 invocation_id=invocation_id,
                 run_id="preflight",

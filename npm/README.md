@@ -15,7 +15,7 @@ wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Pytho
 
 ```bash
 export DEEPRESEARCH_PYTHON=/path/to/python3.11
-npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.8/david-art-beep-deepresearch-cli-0.1.8.tgz
+npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.9/david-art-beep-deepresearch-cli-0.1.9.tgz
 ```
 
 安装脚本会依次探测 `python3.14`、`python3.13`、`python3.12`、`python3.11`、
@@ -27,7 +27,7 @@ Windows PowerShell：
 
 ```powershell
 $env:DEEPRESEARCH_PYTHON = "C:\\Python311\\python.exe"
-npm install -g "https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.8/david-art-beep-deepresearch-cli-0.1.8.tgz"
+npm install -g "https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.9/david-art-beep-deepresearch-cli-0.1.9.tgz"
 ```
 
 ## 使用
@@ -71,7 +71,7 @@ python3 -m venv .venv
 构建后可以在临时 npm prefix 或测试机安装本地包：
 
 ```bash
-npm install -g ./dist/david-art-beep-deepresearch-cli-0.1.8.tgz
+npm install -g ./dist/david-art-beep-deepresearch-cli-0.1.9.tgz
 deepresearch --help
 ```
 
@@ -79,5 +79,5 @@ deepresearch --help
 
 ```bash
 npm login
-npm publish ./dist/david-art-beep-deepresearch-cli-0.1.8.tgz --access public
+npm publish ./dist/david-art-beep-deepresearch-cli-0.1.9.tgz --access public
 ```
