@@ -445,6 +445,43 @@ class OpenClawAcpBackendFactory:
         ).report())
         return report
 
+    async def ensure_timeout(self, seconds: Optional[float]) -> Mapping[str, Any]:
+        """Ensure OpenClaw's provider watchdog is not shorter than the CLI target."""
+        if seconds is None:
+            return {"harness_timeout": "disabled"}
+        target = max(1, int(seconds))
+        provider = "custom-tokenhub-sensetime-com"
+        path = f"models.providers.{provider}.timeoutSeconds"
+        code, out, err = await self._run("config", "get", path)
+        current: Optional[float] = None
+        if code == 0:
+            with contextlib.suppress(TypeError, ValueError):
+                current = float((out or err).strip())
+        if current is not None and current >= target:
+            return {"harness_timeout": "ok", "harness_timeout_seconds": current}
+        set_code, set_out, set_err = await self._run(
+            "config", "set", path, str(target), "--strict-json"
+        )
+        if set_code:
+            raise HarnessError(
+                "OpenClaw provider timeout could not be adjusted: "
+                f"{set_err or set_out or path}"
+            )
+        restart_code, restart_out, restart_err = await self._run(
+            "gateway", "restart"
+        )
+        if restart_code:
+            raise HarnessError(
+                "OpenClaw Gateway restart failed after timeout adjustment: "
+                f"{restart_err or restart_out or 'unknown error'}"
+            )
+        return {
+            "harness_timeout": "adjusted",
+            "harness_timeout_seconds": target,
+            "harness_timeout_previous": current,
+            "harness_timeout_reloaded": True,
+        }
+
     async def _workspace_permissions(self) -> Mapping[str, Any]:
         """Validate the non-interactive Agent workspace contract before a Run."""
 

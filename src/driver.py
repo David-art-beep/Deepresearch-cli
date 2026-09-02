@@ -51,6 +51,7 @@ class ExecutionSessionConfig:
     harness_profile: Optional[str] = None
     harness_model: Optional[str] = None
     node_timeout_seconds: Optional[float] = 600.0
+    harness_timeout_seconds: Optional[float] = 300.0
     max_concurrency: int = 4
     search_mcp_enabled: bool = True
     search_dir: Optional[Path] = None
@@ -71,6 +72,10 @@ class ExecutionSessionConfig:
             not math.isfinite(self.node_timeout_seconds) or self.node_timeout_seconds <= 0
         ):
             raise ValueError("node_timeout_seconds must be finite and positive")
+        if self.harness_timeout_seconds is not None and (
+            not math.isfinite(self.harness_timeout_seconds) or self.harness_timeout_seconds <= 0
+        ):
+            raise ValueError("harness_timeout_seconds must be finite and positive")
         if isinstance(self.max_concurrency, bool) or not isinstance(self.max_concurrency, int) or self.max_concurrency < 1:
             raise ValueError("max_concurrency must be a positive integer")
         if not isinstance(self.search_mcp_enabled, bool):

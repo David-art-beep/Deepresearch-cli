@@ -98,11 +98,18 @@ class WorkflowService:
             return self._harness()
         return self._build_harness(run_id)
 
+    async def _ensure_harness_timeout(self, harness) -> Mapping[str, object]:
+        method = getattr(harness, "ensure_timeout", None)
+        if method is None:
+            return {"harness_timeout": "unsupported"}
+        return await method(self.config.harness_timeout_seconds)
+
     async def doctor(self) -> Mapping[str, object]:
         # Load every built-in node before a paid model invocation starts.
         registry = self.registry()
         harness = self._harness()
-        report = await harness.preflight()
+        timeout_report = await self._ensure_harness_timeout(harness)
+        report = {**timeout_report, **dict(await harness.preflight())}
         try:
             await harness.start()
             probe = await harness.probe()
@@ -126,7 +133,8 @@ class WorkflowService:
         selected = run_id or WorkflowDriver.new_run_id()
         with self.store.execution_session(selected):
             harness = self._harness_for_run(selected)
-            preflight = await harness.preflight()
+            timeout_report = await self._ensure_harness_timeout(harness)
+            preflight = {**timeout_report, **dict(await harness.preflight())}
             await harness.start()
             try:
                 await harness.probe()
@@ -151,7 +159,8 @@ class WorkflowService:
                     inert._export_results(current)
                 return current
             harness = self._harness_for_run(run_id)
-            preflight = await harness.preflight()
+            timeout_report = await self._ensure_harness_timeout(harness)
+            preflight = {**timeout_report, **dict(await harness.preflight())}
             await harness.start()
             try:
                 await harness.probe()
@@ -231,7 +240,8 @@ class WorkflowService:
                 projection = self._import_node_inputs(projection, node, inputs)
                 return await driver.drive(selected, _execution_lock_held=True)
             harness = self._harness_for_run(selected)
-            preflight = await harness.preflight()
+            timeout_report = await self._ensure_harness_timeout(harness)
+            preflight = {**timeout_report, **dict(await harness.preflight())}
             await harness.start()
             try:
                 await harness.probe()

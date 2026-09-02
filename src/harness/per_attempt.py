@@ -40,6 +40,12 @@ class PerAttemptHarness:
     async def preflight(self) -> Mapping[str, Any]:
         return await self.factory.preflight()
 
+    async def ensure_timeout(self, seconds: Optional[float]) -> Mapping[str, Any]:
+        method = getattr(self.factory, "ensure_timeout", None)
+        if method is None:
+            return {"harness_timeout": "unsupported"}
+        return await method(seconds)
+
     async def probe(self) -> Mapping[str, Any]:
         if not self._started or self._closed:
             raise HarnessError("per-attempt Harness has not been started")

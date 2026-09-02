@@ -94,6 +94,12 @@ def _add_execution(
     parser.add_argument("--harness-profile")
     parser.add_argument("--harness-command")
     parser.add_argument("--harness-model")
+    parser.add_argument(
+        "--harness-timeout-seconds",
+        type=_positive_float,
+        default=300.0,
+        help="minimum Harness-internal model request timeout checked before startup",
+    )
     timeout = parser.add_mutually_exclusive_group()
     timeout.add_argument(
         "--node-timeout-seconds",
@@ -328,6 +334,7 @@ def _service(args) -> WorkflowService:
         harness_profile=getattr(args, "harness_profile", None),
         harness_model=getattr(args, "harness_model", None),
         node_timeout_seconds=getattr(args, "node_timeout_seconds", 600.0),
+        harness_timeout_seconds=getattr(args, "harness_timeout_seconds", 300.0),
         max_concurrency=getattr(args, "max_concurrency", 4),
         search_mcp_enabled=getattr(args, "search_mcp", True),
         search_dir=getattr(args, "search_dir", None),
