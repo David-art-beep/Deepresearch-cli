@@ -76,6 +76,8 @@ class _Coordinator(ThreadingHTTPServer):
             return service.get_search_hit(
                 str(params.get("hit_id") or ""), namespace=namespace
             )
+        if method == "record_fetch":
+            return service.record_fetch(params, namespace=namespace)
         raise ValueError(f"unknown coordinator method: {method}")
 
 

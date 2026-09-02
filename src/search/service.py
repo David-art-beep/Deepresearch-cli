@@ -1403,6 +1403,43 @@ class SearchService:
         )
         return result
 
+    def record_fetch(
+        self, values: Mapping[str, Any], *, namespace: Optional[str] = None
+    ) -> dict[str, Any]:
+        """Persist a run-scoped fetch result reported by the tool bridge."""
+        url = values.get("url")
+        if not isinstance(url, str) or not url or len(url) > 8_000:
+            raise ValueError("fetch telemetry requires a bounded URL")
+        status = values.get("status")
+        if status not in {"ok", "failed"}:
+            raise ValueError("fetch telemetry status must be ok or failed")
+        final_url = values.get("final_url")
+        if final_url is not None and (not isinstance(final_url, str) or len(final_url) > 8_000):
+            raise ValueError("fetch telemetry final_url is invalid")
+        retrieval = values.get("retrieval")
+        if retrieval is not None and retrieval not in {"http", "camofox"}:
+            raise ValueError("fetch telemetry retrieval is invalid")
+        reason = values.get("reason")
+        if reason is not None:
+            reason = str(reason)[:500]
+        elapsed = values.get("elapsed_seconds")
+        try:
+            elapsed_value = max(0.0, min(float(elapsed), 86_400.0)) if elapsed is not None else None
+        except (TypeError, ValueError):
+            elapsed_value = None
+        self._telemetry(
+            "fetch_finished",
+            namespace=namespace,
+            operation="fetch_url",
+            status=status,
+            elapsed_seconds=elapsed_value,
+            url=url,
+            final_url=final_url,
+            retrieval=retrieval,
+            reason=reason,
+        )
+        return {"recorded": True}
+
     def close(self) -> None:
         """Terminate provider process groups if the MCP transport is stopped."""
 

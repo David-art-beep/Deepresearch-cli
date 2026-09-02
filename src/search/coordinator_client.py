@@ -93,5 +93,25 @@ class SearchCoordinatorClient:
     def get_search_hit(self, hit_id: str) -> dict[str, Any]:
         return self._call("get_search_hit", hit_id=hit_id)
 
+    def record_fetch(
+        self,
+        *,
+        url: str,
+        final_url: Optional[str] = None,
+        status: str,
+        retrieval: Optional[str] = None,
+        elapsed_seconds: Optional[float] = None,
+        reason: Optional[str] = None,
+    ) -> dict[str, Any]:
+        return self._call(
+            "record_fetch",
+            url=url,
+            final_url=final_url,
+            status=status,
+            retrieval=retrieval,
+            elapsed_seconds=elapsed_seconds,
+            reason=reason,
+        )
+
     def close(self) -> None:
         return None

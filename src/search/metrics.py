@@ -82,6 +82,45 @@ def _fetched_attempts(run_dir: Path) -> tuple[int, int]:
     return len(identities), newest_ns
 
 
+def _fetch_telemetry(events: Iterable[sqlite3.Row]) -> tuple[dict[str, int], int]:
+    """Return fetch counts from explicit bridge telemetry.
+
+    Fetches are executed through the native ``execute`` tool for some
+    harnesses, so ACP event titles are not a reliable source of truth.
+    """
+    successful: set[str] = set()
+    attempts = failed = http = camofox = 0
+    for row in events:
+        if str(row["event_type"] or "") != "fetch_finished":
+            continue
+        attempts += 1
+        try:
+            payload = json.loads(row["payload"])
+        except (TypeError, json.JSONDecodeError):
+            payload = {}
+        if not isinstance(payload, dict):
+            payload = {}
+        status = str(row["status"] or "")
+        retrieval = str(payload.get("retrieval") or "")
+        if status != "ok":
+            failed += 1
+            continue
+        value = _normalized_url(payload.get("final_url") or payload.get("url"))
+        if value:
+            successful.add(value)
+        if retrieval == "http":
+            http += 1
+        elif retrieval == "camofox":
+            camofox += 1
+    return {
+        "attempts": attempts,
+        "succeeded": len(successful),
+        "failed": failed,
+        "http": http,
+        "camofox": camofox,
+    }, len(successful)
+
+
 def empty_search_metrics(*, evidence_count: int = 0) -> dict[str, Any]:
     return {
         "version": "0:0:0",
@@ -90,6 +129,7 @@ def empty_search_metrics(*, evidence_count: int = 0) -> dict[str, Any]:
         "sources": [],
         "api_calls": 0,
         "cache_reused": 0,
+        "fetch": {"attempts": 0, "succeeded": 0, "failed": 0, "http": 0, "camofox": 0},
         "funnel": {
             "raw": 0,
             "unique": 0,
@@ -180,6 +220,11 @@ def build_search_metrics(
     finally:
         if "connection" in locals():
             connection.close()
+
+    fetch_stats, explicit_fetched = _fetch_telemetry(events)
+    if fetch_stats["attempts"]:
+        fetched = explicit_fetched
+        fetched_version = max(fetched_version, int(events[-1]["id"]) if events else 0)
 
     sources: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
@@ -359,6 +404,7 @@ def build_search_metrics(
         "sources": source_items,
         "api_calls": api_calls,
         "cache_reused": cache_reused,
+        "fetch": fetch_stats,
         "funnel": {
             "raw": raw,
             "unique": unique,

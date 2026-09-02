@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -73,6 +74,12 @@ def _parser() -> argparse.ArgumentParser:
 def _execute(args: argparse.Namespace, context: Mapping[str, Any]) -> dict[str, Any]:
     operation = args.operation
     if operation == "fetch-url":
+        client = SearchCoordinatorClient(
+            url=str(context["coordinator_url"]),
+            token=str(context["coordinator_token"]),
+            namespace=str(context["namespace"]),
+            lease_file=Path(str(context["lease_file"])),
+        )
         service = WebFetchService(
             camofox_enabled=bool(context.get("camofox_enabled")),
             camofox_base_url=str(
@@ -80,10 +87,35 @@ def _execute(args: argparse.Namespace, context: Mapping[str, Any]) -> dict[str, 
             ),
             identity=str(context["namespace"]),
         )
+        started = time.monotonic()
         try:
-            return service.fetch(args.url)
+            result = service.fetch(args.url)
+            try:
+                client.record_fetch(
+                    url=args.url,
+                    final_url=result.get("final_url") or result.get("requested_url"),
+                    status="ok" if result.get("ok") is True else "failed",
+                    retrieval=str(result.get("retrieval") or "") or None,
+                    elapsed_seconds=time.monotonic() - started,
+                    reason=str(result.get("reason") or "") or None,
+                )
+            except Exception:
+                pass
+            return result
+        except Exception as exc:
+            try:
+                client.record_fetch(
+                    url=args.url,
+                    status="failed",
+                    elapsed_seconds=time.monotonic() - started,
+                    reason=f"{type(exc).__name__}: {exc}",
+                )
+            except Exception:
+                pass
+            raise
         finally:
             service.close()
+            client.close()
     client = SearchCoordinatorClient(
         url=str(context["coordinator_url"]),
         token=str(context["coordinator_token"]),
