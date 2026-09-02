@@ -500,9 +500,9 @@ class AcpAgentAttemptRuntime(AcpAttemptRuntime):
         if response.stop_reason != "end_turn" or (
             missing_from_listing and not registered_in_native_surface
         ):
-            detail = stderr[-4_000:] if stderr else "no Hermes stderr was emitted"
+            detail = stderr[-4_000:] if stderr else f"no {self.backend_name} stderr was emitted"
             raise HarnessError(
-                "Hermes did not register the DeepResearch search MCP tools; "
+                f"{self.backend_name} did not register the DeepResearch search MCP tools; "
                 f"missing={missing_from_listing}; diagnostics={detail}"
             )
         return expected
@@ -547,15 +547,15 @@ class AcpAgentAttemptRuntime(AcpAttemptRuntime):
                 return expected
             if self._process is not None and self._process.returncode is not None:
                 raise HarnessError(
-                    "Hermes exited before registering the DeepResearch search MCP "
-                    f"tools; diagnostics={stderr[-4_000:] or 'no Hermes stderr was emitted'}"
+                    f"{self.backend_name} exited before registering the DeepResearch search MCP "
+                    f"tools; diagnostics={stderr[-4_000:] or f'no {self.backend_name} stderr was emitted'}"
                 )
             remaining = deadline - loop.time()
             if remaining <= 0:
                 raise HarnessError(
-                    "Hermes did not register the DeepResearch search MCP tools "
+                    f"{self.backend_name} did not register the DeepResearch search MCP tools "
                     f"within {timeout_seconds}s; diagnostics="
-                    f"{stderr[-4_000:] or 'no Hermes stderr was emitted'}"
+                    f"{stderr[-4_000:] or f'no {self.backend_name} stderr was emitted'}"
                 )
             self._stderr_activity.clear()
             try:

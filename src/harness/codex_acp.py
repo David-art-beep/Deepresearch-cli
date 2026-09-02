@@ -168,6 +168,33 @@ class CodexAcpAttemptRuntime(AcpAgentAttemptRuntime):
             )
         ]
 
+    async def _verify_native_search_registration(
+        self,
+        *,
+        server_name: str,
+        timeout_seconds: float,
+    ) -> list[str]:
+        """Codex registers session MCP tools through the App Server bridge.
+
+        Unlike Hermes, Codex does not emit Hermes' stderr registration marker.
+        The bridge owns the session registration, so the expected tool surface
+        is the authoritative check here.
+        """
+        del timeout_seconds
+        return [
+            f"mcp__{server_name}__{tool}"
+            for tool in (
+                "list_search_domains",
+                "start_domain_search",
+                "get_search_batch",
+                "list_search_sources",
+                "batch_search",
+                "search_results",
+                "get_search_hit",
+                "fetch_url",
+            )
+        ]
+
 
 @dataclass(frozen=True)
 class CodexAcpBackendFactory:
