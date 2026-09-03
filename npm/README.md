@@ -2,7 +2,7 @@
 
 这个 npm 格式的安装包是 DeepResearch Python CLI 的安装和命令转发层。包内自带版本一致的 Python
 wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Python，也不把 Python 依赖安装进项目目录。
-当前正式分发渠道是 [GitHub Releases](https://github.com/David-art-beep/Deepresearch-cli/releases)。
+当前安装方式是从 [GitHub 仓库](https://github.com/David-art-beep/Deepresearch-cli)源码构建本地包。
 
 ## 环境要求
 
