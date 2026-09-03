@@ -11,11 +11,16 @@ wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Pytho
 - 安装 Python wheel 依赖时可以访问 Python Package Index；
 - 使用 Hermes、Codex、Claude Code 或 OpenClaw 时，相应 Harness 已安装并配置。
 
-如果 Python 不在标准 PATH 中，可以在安装前指定：
+如果 Python 不在标准 PATH 中，可以在安装前指定。源码安装流程如下：
 
 ```bash
 export DEEPRESEARCH_PYTHON=/path/to/python3.11
-npm install -g https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.9/david-art-beep-deepresearch-cli-0.1.9.tgz
+git clone https://github.com/David-art-beep/Deepresearch-cli.git
+cd Deepresearch-cli
+python3 -m venv .venv
+.venv/bin/python -m pip install build
+.venv/bin/python scripts/build_npm_package.py
+npm install -g ./dist/*.tgz
 ```
 
 安装脚本会依次探测 `python3.14`、`python3.13`、`python3.12`、`python3.11`、
@@ -27,7 +32,7 @@ Windows PowerShell：
 
 ```powershell
 $env:DEEPRESEARCH_PYTHON = "C:\\Python311\\python.exe"
-npm install -g "https://github.com/David-art-beep/Deepresearch-cli/releases/download/v0.1.9/david-art-beep-deepresearch-cli-0.1.9.tgz"
+npm install -g .\\dist\\*.tgz
 ```
 
 ## 使用
@@ -65,19 +70,18 @@ python3 -m venv .venv
 ```
 
 脚本会构建 Python wheel、复制到 npm 包的 `vendor/`，运行 Node 测试，并在根目录 `dist/`
-生成 `.tgz`。发布前必须先为仓库选择并声明合适的开源或商业许可证；当前包明确标记为
-`UNLICENSED`，避免在未授权的情况下错误声明许可证。
+生成 `.tgz`。仓库和 npm 包当前使用 MIT License。
 
 构建后可以在临时 npm prefix 或测试机安装本地包：
 
 ```bash
-npm install -g ./dist/david-art-beep-deepresearch-cli-0.1.9.tgz
+npm install -g ./dist/*.tgz
 deepresearch --help
 ```
 
-如果后续确认 npm scope 属于当前发布账号并补充许可证，可以再同步发布 scoped package：
+如果后续确认 npm scope 属于当前发布账号，可以再发布 scoped package：
 
 ```bash
 npm login
-npm publish ./dist/david-art-beep-deepresearch-cli-0.1.9.tgz --access public
+npm publish ./dist/*.tgz --access public
 ```
