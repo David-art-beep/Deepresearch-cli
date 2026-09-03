@@ -41,7 +41,7 @@ Installation creates an isolated runtime under `~/.deepresearch-cli/npm-runtime/
 not modify the project directory or the system Python environment.
 
 ```bash
-git clone https://github.com/OpenSenseNova/DeepResearch-CLI.git
+git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd DeepResearch-CLI
 python3 -m venv .venv
 .venv/bin/python -m pip install build
@@ -59,7 +59,7 @@ export DEEPRESEARCH_PYTHON=/path/to/python3
 ### Build from source
 
 ```bash
-git clone https://github.com/OpenSenseNova/DeepResearch-CLI.git
+git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd DeepResearch-CLI
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]' build

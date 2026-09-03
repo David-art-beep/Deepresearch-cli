@@ -34,7 +34,7 @@ DeepResearch-CLI 用来完成从研究问题到成品报告的完整流程。它
 `~/.deepresearch-cli/npm-runtime/<version>/` 创建独立环境，不会修改项目目录或系统 Python：
 
 ```bash
-git clone https://github.com/OpenSenseNova/DeepResearch-CLI.git
+git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd DeepResearch-CLI
 python3 -m venv .venv
 .venv/bin/python -m pip install build
@@ -52,7 +52,7 @@ export DEEPRESEARCH_PYTHON=/path/to/python3.11
 ### 从源码构建
 
 ```bash
-git clone https://github.com/OpenSenseNova/DeepResearch-CLI.git
+git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd DeepResearch-CLI
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]' build

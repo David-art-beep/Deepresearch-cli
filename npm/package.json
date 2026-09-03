@@ -5,11 +5,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OpenSenseNova/DeepResearch-CLI.git"
+    "url": "git+https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git"
   },
-  "homepage": "https://github.com/OpenSenseNova/DeepResearch-CLI#readme",
+  "homepage": "https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch#readme",
   "bugs": {
-    "url": "https://github.com/OpenSenseNova/DeepResearch-CLI/issues"
+    "url": "https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch/issues"
   },
   "bin": {
     "deepresearch": "bin/deepresearch.js"

@@ -2,7 +2,7 @@
 
 这个 npm 格式的安装包是 DeepResearch Python CLI 的安装和命令转发层。包内自带版本一致的 Python
 wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Python，也不把 Python 依赖安装进项目目录。
-当前安装方式是从 [GitHub 仓库](https://github.com/OpenSenseNova/DeepResearch-CLI)源码构建本地包。
+当前安装方式是从 [GitHub 仓库](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch)源码构建本地包。
 
 ## 环境要求
 
@@ -15,7 +15,7 @@ wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Pytho
 
 ```bash
 export DEEPRESEARCH_PYTHON=/path/to/python3.11
-git clone https://github.com/OpenSenseNova/DeepResearch-CLI.git
+git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd DeepResearch-CLI
 python3 -m venv .venv
 .venv/bin/python -m pip install build
