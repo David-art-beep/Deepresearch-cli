@@ -35,21 +35,22 @@ Key capabilities:
 
 ## Install
 
-### GitHub Release
+### Install from GitHub source
 
-The npm archive contains the matching Python wheel. Installation creates an isolated runtime under
-`~/.deepresearch-cli/npm-runtime/<version>/` and does not modify the project directory or the system
-Python environment.
+Installation creates an isolated runtime under `~/.deepresearch-cli/npm-runtime/<version>/` and does
+not modify the project directory or the system Python environment.
 
 ```bash
 git clone https://github.com/David-art-beep/Deepresearch-cli.git
-cd Deepresearch-cli/npm && npm install -g .
+cd Deepresearch-cli
+python3 -m venv .venv
+.venv/bin/python -m pip install build
+.venv/bin/python scripts/build_npm_package.py
+npm install -g ./dist/*.tgz
 deepresearch --help
 ```
 
-Choose another package from [Releases](https://github.com/David-art-beep/Deepresearch-cli/releases)
-when installing a different version. If Python cannot be discovered automatically, set it before
-installation:
+If Python cannot be discovered automatically, set it before installation:
 
 ```bash
 export DEEPRESEARCH_PYTHON=/path/to/python3

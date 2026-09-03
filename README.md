@@ -28,18 +28,21 @@ DeepResearch CLI 用来完成从研究问题到成品报告的完整流程。它
 
 ## 安装
 
-### GitHub Release（推荐）
+### GitHub 源码安装（推荐）
 
-Release 提供 npm `.tgz`，其中已经包含同版本的 Python wheel。安装时会在
+安装时会在
 `~/.deepresearch-cli/npm-runtime/<version>/` 创建独立环境，不会修改项目目录或系统 Python：
 
 ```bash
 git clone https://github.com/David-art-beep/Deepresearch-cli.git
-cd Deepresearch-cli/npm && npm install -g .
+cd Deepresearch-cli
+python3 -m venv .venv
+.venv/bin/python -m pip install build
+.venv/bin/python scripts/build_npm_package.py
+npm install -g ./dist/*.tgz
 deepresearch --help
 ```
 
-其他版本请从 [Releases](https://github.com/David-art-beep/Deepresearch-cli/releases) 下载。
 如果安装程序没有找到合适的 Python，可以提前指定：
 
 ```bash
