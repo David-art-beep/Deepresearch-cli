@@ -368,6 +368,13 @@ def _start_lease_watchdog(service: object) -> Optional[threading.Thread]:
     an idle MCP server after that Research node has finished.
     """
 
+    # Codex App Server owns the stdio child lifecycle.  Its session startup
+    # can briefly outlive the CLI-side lease bookkeeping; terminating the
+    # process from this watchdog during MCP initialization makes Codex report
+    # "connection closed: initialize response".  Codex will terminate the
+    # child when its session ends, and the CLI still removes the lease.
+    if os.environ.get("DEEPRESEARCH_SEARCH_DISABLE_WATCHDOG") == "1":
+        return None
     lease_file = getattr(service, "lease_file", None)
     if lease_file is None:
         return None
@@ -391,7 +398,17 @@ def _start_lease_watchdog(service: object) -> Optional[threading.Thread]:
 
 def main() -> None:
     # Constructing the server must keep stdout clean: stdio is the MCP wire.
-    service = _service()
+    try:
+        service = _service()
+    except BaseException as exc:
+        log_path = os.environ.get("DEEPRESEARCH_SEARCH_STARTUP_LOG")
+        if log_path:
+            try:
+                Path(log_path).parent.mkdir(parents=True, exist_ok=True)
+                Path(log_path).write_text(f"{type(exc).__name__}: {exc}\n", encoding="utf-8")
+            except OSError:
+                pass
+        raise
 
     def terminate(signum: int, _frame: object) -> None:
         del signum

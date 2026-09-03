@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepresearch-cli"
-version = "0.1.13"
+version = "0.0.0"
 description = "A configuration-first runtime for DeepResearch workflows"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -33,6 +33,7 @@ template = [
 [project.scripts]
 deepresearch = "deepresearch_cli.cli:main"
 deepresearch-search-mcp = "deepresearch_cli.search.mcp_server:main"
+deepresearch-codex-mcp = "deepresearch_cli.search.codex_mcp_wrapper:main"
 
 [tool.setuptools]
 package-dir = {"deepresearch_cli" = "src"}

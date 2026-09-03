@@ -12,6 +12,31 @@ from typing import Iterator
 _HEADING = re.compile(r"^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$")
 _FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})")
 _TOC_TITLES = {"目录", "table of contents", "toc"}
+_CITATIONS_AFTER_PUNCTUATION = re.compile(
+    r"([。！？；，,!?;])([ \t]*(?:\[\d+\])+)",
+)
+
+
+def move_citations_before_punctuation(markdown: str) -> str:
+    """Put numeric source markers before sentence punctuation (e.g. ``[1]。``)."""
+    lines: list[str] = []
+    fence: tuple[str, int] | None = None
+    for line in markdown.splitlines(keepends=True):
+        marker = _FENCE.match(line.rstrip("\r\n"))
+        if marker:
+            kind, length = marker.group(1)[0], len(marker.group(1))
+            if fence is None:
+                fence = (kind, length)
+            elif kind == fence[0] and length >= fence[1]:
+                fence = None
+            lines.append(line)
+            continue
+        lines.append(
+            line
+            if fence is not None
+            else _CITATIONS_AFTER_PUNCTUATION.sub(r"\2\1", line)
+        )
+    return "".join(lines)
 
 
 def strip_static_toc(markdown: str) -> str:
@@ -82,7 +107,7 @@ def strip_static_toc(markdown: str) -> str:
 def prepared_markdown_source(source: Path) -> Iterator[Path]:
     """Yield a temporary TOC-free source only when preprocessing is needed."""
     original = source.read_text(encoding="utf-8")
-    prepared = strip_static_toc(original)
+    prepared = move_citations_before_punctuation(strip_static_toc(original))
     if prepared == original:
         yield source
         return

@@ -16,6 +16,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--codex-command", required=True)
     parser.add_argument("--profile")
     parser.add_argument("--model")
+    parser.add_argument("--codex-home")
     return parser
 
 
@@ -23,6 +24,7 @@ async def _run(args: argparse.Namespace) -> None:
     app_server = CodexAppServerClient(
         args.codex_command,
         profile=args.profile,
+        codex_home=args.codex_home,
     )
     await app_server.start()
     try:

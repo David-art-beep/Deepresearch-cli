@@ -131,13 +131,15 @@ class SearchMcpSupport:
                 raise HarnessError("run-scoped search coordinator has not started")
             return SearchMcpLaunchSpec(
                 name=name,
-                command=os.path.abspath(sys.executable),
-                args=("-m", "deepresearch_cli.search.mcp_server"),
+                command=self._server_command(),
+                args=(),
                 env={
                     "DEEPRESEARCH_SEARCH_COORDINATOR_URL": str(coordinator_url),
                     "DEEPRESEARCH_SEARCH_COORDINATOR_TOKEN": str(coordinator_token),
                     "DEEPRESEARCH_SEARCH_NAMESPACE": identity,
                     "DEEPRESEARCH_SEARCH_LEASE_FILE": str(selected_lease),
+                    "DEEPRESEARCH_SEARCH_STARTUP_LOG": str((store_dir.parent / "mcp-startup.log").resolve()),
+                    "DEEPRESEARCH_SEARCH_DISABLE_WATCHDOG": "1",
                     "PYTHONUNBUFFERED": "1",
                     **fetch_env,
                 },
@@ -166,6 +168,7 @@ class SearchMcpSupport:
             "DEEPRESEARCH_SEARCH_BATCH_TIMEOUT_SECONDS": str(batch_timeout_seconds),
             "DEEPRESEARCH_SEARCH_PROVIDER_LIMIT": str(self.provider_limit),
             "DEEPRESEARCH_SEARCH_LEASE_FILE": str(selected_lease),
+            "DEEPRESEARCH_SEARCH_STARTUP_LOG": str((store_dir.parent / "mcp-startup.log").resolve()),
             "PYTHONUNBUFFERED": "1",
             **fetch_env,
         }
@@ -181,10 +184,33 @@ class SearchMcpSupport:
             value = environment.get(name_)
             if value:
                 child_env[name_] = value
+        # Prefer the environment's installed console entry point over
+        # ``python -m``.  Virtualenv Python is commonly a symlink to the
+        # underlying uv interpreter; Codex App Server may canonicalize that
+        # path before spawning it, which drops the editable/package context.
+        # The console script retains the venv launcher and is also what users
+        # get from a regular wheel installation.
+        command = self._server_command()
         return SearchMcpLaunchSpec(
             name=name,
-            command=os.path.abspath(sys.executable),
-            args=("-m", "deepresearch_cli.search.mcp_server"),
+            command=command,
+            args=()
+            if command != os.path.abspath(sys.executable)
+            else ("-m", "deepresearch_cli.search.mcp_server"),
             env=child_env,
             lease_file=self.create_lease(selected_lease),
         )
+
+    @staticmethod
+    def _server_command() -> str:
+        import shutil
+
+        entrypoint = shutil.which("deepresearch-codex-mcp")
+        if entrypoint:
+            return os.path.abspath(entrypoint)
+        candidate = Path(sys.executable).expanduser().parent / "deepresearch-codex-mcp"
+        if candidate.is_file():
+            return str(candidate.absolute())
+        # Source/check-out environments may not have console scripts installed.
+        # Keep the original fallback for those environments.
+        return os.path.abspath(sys.executable)

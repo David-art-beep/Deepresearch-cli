@@ -795,6 +795,9 @@ class AcpAgentAttemptRuntime(AcpAttemptRuntime):
                 )
                 if search_descriptor is not None:
                     mcp_servers.append(search_descriptor)
+            prepare = getattr(self, "_prepare_session_environment", None)
+            if prepare is not None:
+                prepare(invocation, mcp_servers)
             session = await await_with_invocation_budget(
                 self._connection.new_session(
                     cwd=str(invocation.workspace),

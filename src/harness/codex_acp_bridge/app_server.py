@@ -7,6 +7,7 @@ import contextlib
 import json
 import os
 import signal
+import sys
 from collections.abc import Awaitable, Callable
 from typing import Any, Optional
 
@@ -25,10 +26,12 @@ class CodexAppServerClient:
         *,
         profile: Optional[str] = None,
         notification_handler: Optional[NotificationHandler] = None,
+        codex_home: Optional[str] = None,
     ) -> None:
         self.command = command
         self.profile = profile
         self.notification_handler = notification_handler
+        self.codex_home = codex_home
         self.process: Optional[asyncio.subprocess.Process] = None
         self.stderr_chunks: list[str] = []
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
@@ -49,12 +52,13 @@ class CodexAppServerClient:
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=dict(os.environ),
+            env={**os.environ, **({"CODEX_HOME": self.codex_home} if self.codex_home else {})},
             start_new_session=True,
             limit=16_000_000,
         )
         self._reader_task = asyncio.create_task(self._read_stdout())
         self._stderr_task = asyncio.create_task(self._read_stderr())
+
 
     async def initialize(self) -> dict[str, Any]:
         result = await self.request(
@@ -77,6 +81,7 @@ class CodexAppServerClient:
             raise CodexAppServerError("Codex App Server is not running")
         self._request_id += 1
         request_id = self._request_id
+        self._diagnostic(f"request id={request_id} method={method}")
         future = asyncio.get_running_loop().create_future()
         self._pending[request_id] = future
         try:
@@ -122,10 +127,25 @@ class CodexAppServerClient:
                     if future is None or future.done():
                         continue
                     if "error" in message:
-                        future.set_exception(
-                            CodexAppServerError(str(message["error"]))
+                        error_value = message["error"]
+                        self._diagnostic(
+                            "response_error "
+                            + json.dumps(
+                                {"id": message_id, "error": error_value},
+                                ensure_ascii=False,
+                            )[:4000]
                         )
+                        detail = (
+                            json.dumps(error_value, ensure_ascii=False)
+                            if isinstance(error_value, (dict, list))
+                            else str(error_value)
+                        )
+                        stderr = self.stderr[-2000:].strip()
+                        if stderr:
+                            detail = f"{detail}; app-server stderr: {stderr}"
+                        future.set_exception(CodexAppServerError(detail))
                     else:
+                        self._diagnostic(f"response_ok id={message_id}")
                         result = message.get("result")
                         future.set_result(result if isinstance(result, dict) else {})
                     continue
@@ -134,6 +154,20 @@ class CodexAppServerClient:
                     continue
                 if isinstance(method, str) and self.notification_handler is not None:
                     params = message.get("params")
+                    if method in {"error", "turn/completed", "thread/tokenUsage/updated"} or method.startswith("item/"):
+                        self._diagnostic(
+                            "notification "
+                            + json.dumps(
+                                {"method": method, "params": params},
+                                ensure_ascii=False,
+                            )[:6000]
+                        )
+                    if method == "error":
+                        self.stderr_chunks.append(
+                            "APP_SERVER_EVENT error: "
+                            + json.dumps(params, ensure_ascii=False)
+                            + "\n"
+                        )
                     await self.notification_handler(
                         method, params if isinstance(params, dict) else {}
                     )
@@ -155,6 +189,15 @@ class CodexAppServerClient:
 
     async def _answer_server_request(self, request_id: int, method: str) -> None:
         if method in {
+            "item/mcpToolCall/requestApproval",
+            "item/tool/requestApproval",
+        }:
+            # Search MCP is an attempt-scoped, non-destructive server. Codex
+            # must receive an explicit approval response or it leaves the
+            # MCP call pending and eventually reports a generic Internal error.
+            await self._send({"id": request_id, "result": {"decision": "accept"}})
+            return
+        if method in {
             "item/commandExecution/requestApproval",
             "item/fileChange/requestApproval",
             "item/permissions/requestApproval",
@@ -163,6 +206,12 @@ class CodexAppServerClient:
         else:
             result = {}
         await self._send({"id": request_id, "result": result})
+
+    @staticmethod
+    def _diagnostic(message: str) -> None:
+        # The bridge stderr is persisted per execution session by the CLI.
+        # Keep protocol diagnostics off stdout, which is the ACP wire.
+        print("CODEX_APP_SERVER " + message, file=sys.stderr, flush=True)
 
     async def _read_stderr(self) -> None:
         assert self.process is not None and self.process.stderr is not None

@@ -6,11 +6,15 @@ import asyncio
 import os
 import shutil
 import sys
+import tempfile
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from acp.schema import EnvVariable, McpServerStdio
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
 from deepresearch_cli.progress import ProgressReporter
 from deepresearch_cli.search.registry import (
@@ -78,6 +82,8 @@ class CodexAcpAttemptRuntime(AcpAgentAttemptRuntime):
             camofox_base_url=camofox_base_url,
             expected_invocation_id=expected_invocation_id,
         )
+        self._prepared_search_spec = None
+        self._codex_home = None
         # Do not resolve a virtual-environment interpreter symlink: the bridge
         # must retain the environment containing deepresearch_cli.
         self.acp_command = bridge_python
@@ -105,6 +111,25 @@ class CodexAcpAttemptRuntime(AcpAgentAttemptRuntime):
         if self.codex_model:
             args.extend(["--model", self.codex_model])
         return tuple(args)
+
+    @staticmethod
+    def _write_codex_mcp_config(home: Path, spec: Any) -> None:
+        home.mkdir(parents=True, exist_ok=True)
+        lines = [f"[mcp_servers.{spec.name}]", f"command = {json.dumps(spec.command)}", f"cwd = {json.dumps(str(home))}", "enabled = true", "required = true", "startup_timeout_sec = 30", "tool_timeout_sec = 120"]
+        if spec.args:
+            lines.append("args = [" + ", ".join(json.dumps(str(x)) for x in spec.args) + "]")
+        if spec.env:
+            lines += ["", f"[mcp_servers.{spec.name}.env]"]
+            lines.extend(f"{key} = {json.dumps(str(value), ensure_ascii=False)}" for key, value in sorted(spec.env.items()))
+        (home / "config.toml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def _prepare_session_environment(self, invocation: AgentInvocation, servers: list[Any]) -> None:
+        if not servers:
+            return
+        project = invocation.workspace / ".codex"
+        project.mkdir(parents=True, exist_ok=True)
+        if self._prepared_search_spec is not None:
+            self._write_codex_mcp_config(project, self._prepared_search_spec)
 
     def _notify_invocation_started(self, invocation: AgentInvocation) -> None:
         self._acp_invocation_started(invocation)
@@ -135,6 +160,9 @@ class CodexAcpAttemptRuntime(AcpAgentAttemptRuntime):
             batch_timeout_seconds=batch_timeout_seconds or 120.0,
             lease_file=lease_file,
         )
+        if self._prepared_search_spec is not None and identity == self.expected_invocation_id:
+            spec = self._prepared_search_spec
+        self._prepared_search_spec = spec
         descriptor = McpServerStdio(
             name=spec.name,
             command=spec.command,
@@ -298,6 +326,9 @@ class CodexAcpBackendFactory:
                     "search_route_available_count": available,
                 }
             )
+            # Verify the actual stdio MCP process and tool surface. Registry
+            # metadata alone cannot detect App Server spawn/handshake issues.
+            report["search_mcp_probe"] = await self._probe_search_mcp(support)
         else:
             report["search_mcp"] = "disabled"
         report.update(
@@ -308,6 +339,40 @@ class CodexAcpBackendFactory:
             ).report()
         )
         return report
+
+    async def _probe_search_mcp(self, support: SearchMcpSupport) -> Mapping[str, Any]:
+        with tempfile.TemporaryDirectory(prefix="deepresearch-codex-mcp-") as raw:
+            root = Path(raw)
+            spec = support.build(identity="doctor", store_dir=root / "store")
+            env = dict(os.environ)
+            env.update(spec.env)
+            params = StdioServerParameters(
+                command=spec.command,
+                args=list(spec.args),
+                env=env,
+            )
+            try:
+                async with stdio_client(params) as (read, write):
+                    async with ClientSession(read, write) as session:
+                        await asyncio.wait_for(session.initialize(), timeout=30)
+                        tools = await asyncio.wait_for(session.list_tools(), timeout=30)
+                        names = {tool.name for tool in tools.tools}
+                        required = {
+                            "list_search_domains",
+                            "list_search_sources",
+                        }
+                        missing = sorted(required - names)
+                        if missing:
+                            raise HarnessError(
+                                "Search MCP is missing required tools: "
+                                + ", ".join(missing)
+                            )
+                        await asyncio.wait_for(
+                            session.call_tool("list_search_domains", {}), timeout=30
+                        )
+                return {"status": "ok", "tool_count": len(names)}
+            except Exception as exc:
+                raise HarnessError(f"Search MCP probe failed: {exc}") from exc
 
     async def probe(self) -> Mapping[str, Any]:
         return {

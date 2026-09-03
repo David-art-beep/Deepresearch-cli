@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import traceback
 import uuid
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
@@ -35,6 +36,7 @@ class _Session:
     allow_edits: bool = False
     active_turn_id: Optional[str] = None
     usage: Optional[Usage] = None
+    mcp_enabled: bool = False
 
 
 class CodexAcpBridgeAgent:
@@ -84,7 +86,11 @@ class CodexAcpBridgeAgent:
         mcp_servers: list[Any] | None = None,
         **_: Any,
     ) -> NewSessionResponse:
-        config = self._mcp_config(mcp_servers or [])
+        try:
+            config = self._mcp_config(mcp_servers or [])
+        except Exception:
+            traceback.print_exc()
+            raise
         params: dict[str, Any] = {
             "cwd": cwd,
             "approvalPolicy": "never",
@@ -93,15 +99,23 @@ class CodexAcpBridgeAgent:
         }
         if self.model:
             params["model"] = self.model
+        # App Server reads project config at process/session boundaries, which
+        # can race with the CLI creating the attempt workspace.  Send the ACP
+        # MCP declaration directly as well; the project config remains a
+        # compatibility fallback for Codex versions that ignore this field.
         if config:
             params["config"] = config
-        result = await self.app_server.request("thread/start", params)
+        try:
+            result = await self.app_server.request("thread/start", params)
+        except Exception:
+            traceback.print_exc()
+            raise
         thread = result.get("thread")
         thread_id = thread.get("id") if isinstance(thread, Mapping) else None
         if not isinstance(thread_id, str) or not thread_id:
             raise CodexAppServerError("thread/start did not return a thread id")
         session_id = "codex-acp-" + uuid.uuid4().hex
-        session = _Session(session_id, thread_id, cwd, self.model)
+        session = _Session(session_id, thread_id, cwd, self.model, mcp_enabled=bool(config))
         self.sessions[session_id] = session
         self._sessions_by_thread[thread_id] = session
         return NewSessionResponse(session_id=session_id)
@@ -139,7 +153,9 @@ class CodexAcpBridgeAgent:
             sandbox_policy = {
                 "type": "workspaceWrite",
                 "writableRoots": [session.cwd],
-                "networkAccess": False,
+                # Search MCP may use the local coordinator and configured
+                # provider network. Keep ordinary sessions restricted.
+                "networkAccess": session.mcp_enabled,
             }
         else:
             sandbox_policy = {
@@ -156,7 +172,11 @@ class CodexAcpBridgeAgent:
         }
         if session.model:
             params["model"] = session.model
-        result = await self.app_server.request("turn/start", params)
+        try:
+            result = await self.app_server.request("turn/start", params)
+        except Exception:
+            traceback.print_exc()
+            raise
         turn = result.get("turn")
         turn_id = turn.get("id") if isinstance(turn, Mapping) else None
         if not isinstance(turn_id, str) or not turn_id:
@@ -245,7 +265,10 @@ class CodexAcpBridgeAgent:
             value: dict[str, Any] = {
                 "command": server.command,
                 "args": list(server.args or []),
+                "enabled": True,
                 "required": True,
+                "startup_timeout_sec": 30,
+                "tool_timeout_sec": 120,
             }
             if environment:
                 value["env"] = environment

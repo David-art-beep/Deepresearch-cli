@@ -200,7 +200,9 @@ $if(toc)$
   #v(4mm)
   #text(font: ("Heiti SC", "STHeiti", "Arial Unicode MS"), size: 24pt, weight: "bold", fill: navy)[目录]
   #v(8mm)
-  #show outline.entry.where(level: 1): set block(above: 0.72em, below: 0.18em)
+  #show outline.entry.where(level: 1): set text(size: 13.5pt, weight: "bold")
+  #show outline.entry.where(level: 1): set block(above: 0.72em, below: 0.22em)
+  #show outline.entry.where(level: 2): set text(size: 11.2pt)
   #outline(title: none, depth: 1, indent: 1.2em)
 ]
 $endif$

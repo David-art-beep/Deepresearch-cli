@@ -56,6 +56,22 @@ def _set_page_break_before(paragraph: ET.Element) -> None:
         ET.SubElement(properties, f"{_W}pageBreakBefore")
 
 
+def _set_body_paragraph_spacing(paragraph: ET.Element) -> None:
+    """Make body paragraphs flow continuously while keeping readable line spacing."""
+    properties = paragraph.find(f"{_W}pPr")
+    if properties is None:
+        properties = ET.Element(f"{_W}pPr")
+        paragraph.insert(0, properties)
+    spacing = properties.find(f"{_W}spacing")
+    if spacing is None:
+        spacing = ET.SubElement(properties, f"{_W}spacing")
+    # Keep a modest paragraph gap while using tighter in-paragraph line spacing.
+    spacing.set(f"{_W}before", "0")
+    spacing.set(f"{_W}after", "120")
+    spacing.set(f"{_W}line", "285")
+    spacing.set(f"{_W}lineRule", "auto")
+
+
 def _shade_cell(cell: ET.Element, fill: str) -> None:
     properties = cell.find(f"{_W}tcPr")
     if properties is None:
@@ -140,6 +156,21 @@ def _cover_paragraph(
 
 def _cover_title_table(paragraph: ET.Element) -> ET.Element:
     """Place the Pandoc title in a restrained consulting-style cover panel."""
+    paragraph_properties = paragraph.find(f"{_W}pPr")
+    if paragraph_properties is None:
+        paragraph_properties = ET.Element(f"{_W}pPr")
+        paragraph.insert(0, paragraph_properties)
+    alignment = paragraph_properties.find(f"{_W}jc")
+    if alignment is None:
+        alignment = ET.SubElement(paragraph_properties, f"{_W}jc")
+    alignment.set(f"{_W}val", "left")
+    # Add balanced vertical padding so the title sits in the visual middle of
+    # the cover panel instead of hugging its top edge.
+    spacing = paragraph_properties.find(f"{_W}spacing")
+    if spacing is None:
+        spacing = ET.SubElement(paragraph_properties, f"{_W}spacing")
+    spacing.set(f"{_W}before", "420")
+    spacing.set(f"{_W}after", "420")
     for run in paragraph.findall(f"{_W}r"):
         properties = run.find(f"{_W}rPr")
         if properties is None:
@@ -221,10 +252,23 @@ def _polish_docx(path: Path) -> None:
             _cover_paragraph(
                 "DEEP RESEARCH  /  INSIGHT REPORT",
                 before="780",
-                after="300",
+                after="2300",
                 size="19",
                 color="0E7490",
                 bold=True,
+            ),
+        )
+        # Word collapses spacing on a paragraph immediately followed by a
+        # table. Use a dedicated spacer paragraph so the title panel visibly
+        # sits lower on the cover, matching the PDF composition.
+        body.insert(
+            title_index + 1,
+            _cover_paragraph(
+                "",
+                before="0",
+                after="900",
+                size="2",
+                color="FFFFFF",
             ),
         )
         children = list(body)
@@ -251,6 +295,31 @@ def _polish_docx(path: Path) -> None:
                 ),
             )
 
+        # Enlarge and lower the original cover metadata beneath the title panel.
+        for paragraph in body.findall(f"{_W}p"):
+            style = paragraph.find(f"{_W}pPr/{_W}pStyle")
+            style_name = style.get(f"{_W}val") if style is not None else ""
+            if style_name not in {"Subtitle", "Date"}:
+                continue
+            properties = paragraph.find(f"{_W}pPr")
+            if properties is None:
+                properties = ET.Element(f"{_W}pPr")
+                paragraph.insert(0, properties)
+            spacing = properties.find(f"{_W}spacing")
+            if spacing is None:
+                spacing = ET.SubElement(properties, f"{_W}spacing")
+            spacing.set(f"{_W}before", "280")
+            for run in paragraph.findall(f"{_W}r"):
+                run_properties = run.find(f"{_W}rPr")
+                if run_properties is None:
+                    run_properties = ET.Element(f"{_W}rPr")
+                    run.insert(0, run_properties)
+                for tag in ("sz", "szCs"):
+                    size = run_properties.find(f"{_W}{tag}")
+                    if size is None:
+                        size = ET.SubElement(run_properties, f"{_W}{tag}")
+                    size.set(f"{_W}val", "24" if style_name == "Subtitle" else "20")
+
     for index, child in enumerate(list(body)):
         gallery = child.find(f".//{_W}docPartGallery")
         if gallery is not None and gallery.get(f"{_W}val") == "Table of Contents":
@@ -260,16 +329,43 @@ def _polish_docx(path: Path) -> None:
             body.insert(index, _page_break_paragraph())
             toc_position = list(body).index(child)
             body.insert(toc_position + 1, _page_break_paragraph())
-            for following in list(body)[toc_position + 1 :]:
-                style = following.find(f"{_W}pPr/{_W}pStyle")
-                if (
-                    following.tag == f"{_W}p"
-                    and style is not None
-                    and style.get(f"{_W}val") == "Heading1"
-                ):
-                    _set_page_break_before(following)
-                    break
             break
+
+    # Pandoc inherits sizeable after-spacing from some reference styles. Normalize
+    # ordinary body paragraphs so adjacent paragraphs touch naturally; headings and
+    # the generated TOC retain their own hierarchy spacing.
+    body_styles = {"Title", "Date", "Heading1", "Heading2", "Heading3", "Heading4", "Heading5", "Heading6"}
+    for paragraph in body.findall(f"{_W}p"):
+        style = paragraph.find(f"{_W}pPr/{_W}pStyle")
+        style_name = style.get(f"{_W}val") if style is not None else ""
+        if style_name == "Heading1":
+            properties = paragraph.find(f"{_W}pPr")
+            if properties is None:
+                properties = ET.Element(f"{_W}pPr")
+                paragraph.insert(0, properties)
+            for tag in ("pageBreakBefore", "keepNext", "keepLines"):
+                node = properties.find(f"{_W}{tag}")
+                if node is not None:
+                    properties.remove(node)
+            ET.SubElement(properties, f"{_W}keepNext")
+            continue
+        if style_name not in body_styles and not paragraph.find(f".//{_W}docPartGallery") is not None:
+            _set_body_paragraph_spacing(paragraph)
+
+    # Restore the intentional cover spacer after generic body normalization.
+    body_children = list(body)
+    for index, child in enumerate(body_children[:-1]):
+        if child.tag == f"{_W}p" and not "".join(child.itertext()).strip():
+            following = body_children[index + 1]
+            if following.tag == f"{_W}tbl" and following.find(f"{_W}tblPr/{_W}tblCaption") is not None:
+                spacing = child.find(f"{_W}pPr/{_W}spacing")
+                if spacing is not None:
+                    spacing.set(f"{_W}after", "0")
+                    # Fixed-height spacer: Word otherwise collapses an empty
+                    # paragraph before a table and pulls the title panel up.
+                    spacing.set(f"{_W}line", "1800")
+                    spacing.set(f"{_W}lineRule", "exact")
+                break
 
     for table in body.iter(f"{_W}tbl"):
         caption = table.find(f"{_W}tblPr/{_W}tblCaption")
@@ -285,6 +381,24 @@ def _polish_docx(path: Path) -> None:
                 _style_table_text(cell, header=row_index == 0)
 
     updated_xml = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+    styles_xml: bytes | None = None
+    for item, content in entries:
+        if item.filename == "word/styles.xml":
+            styles = ET.fromstring(content)
+            # The reference template marks Heading 1 as page-break-before,
+            # which creates large white areas when a section is short. Keep
+            # headings flowing with the preceding text instead.
+            for style in styles.findall(f"{_W}style"):
+                if style.get(f"{_W}styleId") == "Heading1":
+                    properties = style.find(f"{_W}pPr")
+                    if properties is not None:
+                        for tag in ("pageBreakBefore", "keepNext", "keepLines"):
+                            node = properties.find(f"{_W}{tag}")
+                            if node is not None:
+                                properties.remove(node)
+                        ET.SubElement(properties, f"{_W}keepNext")
+                    break
+            styles_xml = ET.tostring(styles, encoding="utf-8", xml_declaration=True)
     settings_xml: bytes | None = None
     for item, content in entries:
         if item.filename == "word/settings.xml":
@@ -308,6 +422,8 @@ def _polish_docx(path: Path) -> None:
                     item,
                     updated_xml
                     if item.filename == "word/document.xml"
+                    else styles_xml
+                    if item.filename == "word/styles.xml" and styles_xml is not None
                     else settings_xml
                     if item.filename == "word/settings.xml" and settings_xml is not None
                     else content,

@@ -173,7 +173,8 @@ def build(output: Path) -> None:
     normal = styles["Normal"]
     _font(normal, "Aptos", "PingFang SC", 9.8, color="243447")
     normal.paragraph_format.line_spacing = 1.4
-    normal.paragraph_format.space_after = Pt(8)
+    normal.paragraph_format.space_before = Pt(0)
+    normal.paragraph_format.space_after = Pt(0)
     normal.paragraph_format.widow_control = True
 
     title = styles["Title"]
@@ -223,28 +224,30 @@ def build(output: Path) -> None:
         body = _paragraph_style(styles, name)
         _font(body, "Aptos", "PingFang SC", 9.8, color="243447")
         body.paragraph_format.line_spacing = 1.4
-        body.paragraph_format.space_after = Pt(8)
+        body.paragraph_format.space_before = Pt(0)
+        body.paragraph_format.space_after = Pt(0)
         body.paragraph_format.widow_control = True
     styles["First Paragraph"].paragraph_format.first_line_indent = Mm(0)
 
     list_paragraph = _paragraph_style(styles, "List Paragraph")
     _font(list_paragraph, "Aptos", "PingFang SC", 9.8, color="243447")
     list_paragraph.paragraph_format.line_spacing = 1.4
-    list_paragraph.paragraph_format.space_after = Pt(4)
+    list_paragraph.paragraph_format.space_before = Pt(0)
+    list_paragraph.paragraph_format.space_after = Pt(0)
     list_paragraph.paragraph_format.left_indent = Mm(7.4)
     list_paragraph.paragraph_format.first_line_indent = Mm(-3.7)
 
     _font(styles["Quote"], "Aptos", "PingFang SC", 9.5, color="475467")
     styles["Quote"].paragraph_format.left_indent = Mm(8)
     styles["Quote"].paragraph_format.right_indent = Mm(8)
-    styles["Quote"].paragraph_format.space_before = Pt(6)
-    styles["Quote"].paragraph_format.space_after = Pt(6)
+    styles["Quote"].paragraph_format.space_before = Pt(0)
+    styles["Quote"].paragraph_format.space_after = Pt(0)
 
     source_code = _paragraph_style(styles, "Source Code")
     _font(source_code, "JetBrains Mono", "PingFang SC", 8.5, color="404040")
     source_code.paragraph_format.line_spacing = 1.15
-    source_code.paragraph_format.space_before = Pt(6)
-    source_code.paragraph_format.space_after = Pt(8)
+    source_code.paragraph_format.space_before = Pt(0)
+    source_code.paragraph_format.space_after = Pt(0)
     source_code.paragraph_format.left_indent = Mm(5)
     source_code.paragraph_format.right_indent = Mm(5)
 
@@ -256,19 +259,19 @@ def build(output: Path) -> None:
     caption = _paragraph_style(styles, "Caption")
     _font(caption, "Aptos", "PingFang SC", 8.5, color="667085")
     caption.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    caption.paragraph_format.space_before = Pt(4)
-    caption.paragraph_format.space_after = Pt(8)
+    caption.paragraph_format.space_before = Pt(0)
+    caption.paragraph_format.space_after = Pt(0)
     caption.paragraph_format.keep_with_next = True
     for name in ("Figure", "Image Caption", "Table Caption"):
         item = _paragraph_style(styles, name, base="Caption")
         _font(item, "Aptos", "PingFang SC", 8.5, color="667085")
 
-    for level, size, indent in ((1, 10.5, 0), (2, 9.5, 5.5), (3, 9, 11)):
+    for level, size, indent in ((1, 13, 0), (2, 12, 5.5), (3, 11, 11)):
         toc = _paragraph_style(styles, f"TOC {level}")
         _font(toc, "Aptos", "PingFang SC", size, bold=level == 1, color="243447")
         toc.paragraph_format.left_indent = Mm(indent)
-        toc.paragraph_format.space_before = Pt(5 if level == 1 else 2)
-        toc.paragraph_format.space_after = Pt(3)
+        toc.paragraph_format.space_before = Pt(1 if level == 1 else 0)
+        toc.paragraph_format.space_after = Pt(1)
 
     _table_style(styles)
 
