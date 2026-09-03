@@ -1,5 +1,5 @@
 {
-  "name": "@david-art-beep/deepresearch-cli",
+  "name": "sensenova-skills-deepresearch",
   "version": "0.0.0",
   "description": "npm installer and launcher for the DeepResearch Python CLI",
   "license": "MIT",

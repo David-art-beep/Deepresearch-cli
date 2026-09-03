@@ -12,7 +12,7 @@ const command = pythonExecutable(runtimePath);
 if (!fs.existsSync(command)) {
   console.error(
     `[deepresearch] Python runtime is missing at ${runtimePath}.\n` +
-      "Run `npm rebuild -g @david-art-beep/deepresearch-cli` or reinstall the package."
+      "Run `npm rebuild -g sensenova-skills-deepresearch` or reinstall the package."
   );
   process.exit(1);
 }

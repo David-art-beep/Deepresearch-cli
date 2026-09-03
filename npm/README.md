@@ -16,7 +16,7 @@ wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Pytho
 ```bash
 export DEEPRESEARCH_PYTHON=/path/to/python3.11
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
-cd DeepResearch-CLI
+cd SenseNova-Skills-DeepResearch
 python3 -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py

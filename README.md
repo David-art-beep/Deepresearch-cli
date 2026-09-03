@@ -1,4 +1,4 @@
-# DeepResearch-CLI
+# SenseNova-Skills-DeepResearch
 
 [English](README_EN.md) | 简体中文
 
@@ -35,7 +35,7 @@ DeepResearch-CLI 用来完成从研究问题到成品报告的完整流程。它
 
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
-cd DeepResearch-CLI
+cd SenseNova-Skills-DeepResearch
 python3 -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py
@@ -53,7 +53,7 @@ export DEEPRESEARCH_PYTHON=/path/to/python3.11
 
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
-cd DeepResearch-CLI
+cd SenseNova-Skills-DeepResearch
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]' build
 .venv/bin/python scripts/build_npm_package.py

@@ -1,4 +1,4 @@
-# DeepResearch-CLI
+# SenseNova-Skills-DeepResearch
 
 English | [简体中文](README.md)
 
@@ -42,7 +42,7 @@ not modify the project directory or the system Python environment.
 
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
-cd DeepResearch-CLI
+cd SenseNova-Skills-DeepResearch
 python3 -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py
@@ -60,7 +60,7 @@ export DEEPRESEARCH_PYTHON=/path/to/python3
 
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
-cd DeepResearch-CLI
+cd SenseNova-Skills-DeepResearch
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]' build
 .venv/bin/python scripts/build_npm_package.py
