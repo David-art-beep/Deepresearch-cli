@@ -1,4 +1,4 @@
-# DeepResearch 配置运行时设计
+# SenseNova-Skills-DeepResearch 配置运行时设计
 
 本文描述当前运行时的稳定设计：配置模型、Workflow 编译、节点调度、Artifact 发布、持久化、ACP Harness、Search MCP 和扩展边界。
 

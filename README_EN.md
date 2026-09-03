@@ -2,7 +2,7 @@
 
 English | [简体中文](README.md)
 
-DeepResearch-CLI turns a research question into a finished, evidence-backed report. It plans the
+SenseNova-Skills-DeepResearch turns a research question into a finished, evidence-backed report. It plans the
 work, searches multiple source domains concurrently, collects evidence, writes and validates the
 report, and exports Markdown, HTML, PDF, or DOCX. Runs are persisted, visible through terminal and
 Web progress views, and resumable after interruption.
@@ -302,7 +302,7 @@ models or incur external service charges.
 
 - [Documentation index](docs/README.md)
 - [Diagnostics guide](docs/diagnostics.md)
-- [DeepResearch-CLI user guide](docs/usage-guide.md)
+- [SenseNova-Skills-DeepResearch user guide](docs/usage-guide.md)
 - [Search MCP architecture](docs/search-mcp.md)
 - [Runtime design and extension model](docs/design.md)
 - [Custom workflow example](examples/custom-workflow/README.md)

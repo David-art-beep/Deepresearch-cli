@@ -1,4 +1,4 @@
-# DeepResearch-CLI 诊断指南
+# SenseNova-Skills-DeepResearch 诊断指南
 
 需要定位当前安装所携带的本文件时，执行：
 
@@ -6,7 +6,7 @@
 deepresearch diagnostics --json
 ```
 
-本文供 DeepResearch Skill 和维护者在安装、预检、启动、搜索、浏览器回退、运行恢复或导出失败时使用。按故障范围执行最少的只读检查；不要为了诊断重置配置、删除 Run 或启动重复任务。
+本文供 sn-deepresearch-cli 和维护者在安装、预检、启动、搜索、浏览器回退、运行恢复或导出失败时使用。按故障范围执行最少的只读检查；不要为了诊断重置配置、删除 Run 或启动重复任务。
 
 ## 1. 诊断原则
 

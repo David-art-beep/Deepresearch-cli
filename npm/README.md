@@ -1,6 +1,6 @@
-# DeepResearch-CLI for npm
+# SenseNova-Skills-DeepResearch for npm
 
-这个 npm 格式的安装包是 DeepResearch Python CLI 的安装和命令转发层。包内自带版本一致的 Python
+这个 npm 格式的安装包是 SenseNova-Skills-DeepResearch 的安装和命令转发层。包内自带版本一致的 Python
 wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Python，也不把 Python 依赖安装进项目目录。
 当前安装方式是从 [GitHub 仓库](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch)源码构建本地包。
 

@@ -1,6 +1,6 @@
-# DeepResearch-CLI 使用指南
+# SenseNova-Skills-DeepResearch 使用指南
 
-本文说明当前 CLI 命令、研究模式、节点链路、输入输出、超时和恢复行为。
+本文说明当前 SenseNova-Skills-DeepResearch 命令、研究模式、节点链路、输入输出、超时和恢复行为。
 
 ## 1. 核心选择
 
