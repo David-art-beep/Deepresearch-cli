@@ -2,7 +2,7 @@
   "name": "@david-art-beep/deepresearch-cli",
   "version": "0.0.0",
   "description": "npm installer and launcher for the DeepResearch Python CLI",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/David-art-beep/Deepresearch-cli.git"
