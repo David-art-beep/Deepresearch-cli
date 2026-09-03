@@ -1,8 +1,8 @@
-# DeepResearch CLI
+# DeepResearch-CLI
 
 [English](README_EN.md) | 简体中文
 
-DeepResearch CLI 用来完成从研究问题到成品报告的完整流程。它会自动拆解问题、并发搜索、整理证据、
+DeepResearch-CLI 用来完成从研究问题到成品报告的完整流程。它会自动拆解问题、并发搜索、整理证据、
 撰写和检查报告，并可导出 Markdown、HTML、PDF 或 DOCX。整个过程在本地运行，可查看进度、保留记录，
 也能在中断后继续，同时复用用户已有的 Hermes、Codex、Claude Code 或 OpenClaw 模型环境。
 
@@ -34,8 +34,8 @@ DeepResearch CLI 用来完成从研究问题到成品报告的完整流程。它
 `~/.deepresearch-cli/npm-runtime/<version>/` 创建独立环境，不会修改项目目录或系统 Python：
 
 ```bash
-git clone https://github.com/David-art-beep/Deepresearch-cli.git
-cd Deepresearch-cli
+git clone https://github.com/OpenSenseNova/DeepResearch-CLI.git
+cd DeepResearch-CLI
 python3 -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py
@@ -52,8 +52,8 @@ export DEEPRESEARCH_PYTHON=/path/to/python3.11
 ### 从源码构建
 
 ```bash
-git clone https://github.com/David-art-beep/Deepresearch-cli.git
-cd Deepresearch-cli
+git clone https://github.com/OpenSenseNova/DeepResearch-CLI.git
+cd DeepResearch-CLI
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]' build
 .venv/bin/python scripts/build_npm_package.py
@@ -287,7 +287,7 @@ python3 -m venv .venv
 
 - [文档索引](docs/README.md)
 - [诊断指南](docs/diagnostics.md)
-- [DeepResearch CLI 使用指南](docs/usage-guide.md)
+- [DeepResearch-CLI 使用指南](docs/usage-guide.md)
 - [Search MCP 架构与工具说明](docs/search-mcp.md)
 - [运行时设计与扩展方式](docs/design.md)
 - [自定义工作流示例](examples/custom-workflow/README.md)

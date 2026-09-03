@@ -5,11 +5,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/David-art-beep/Deepresearch-cli.git"
+    "url": "git+https://github.com/OpenSenseNova/DeepResearch-CLI.git"
   },
-  "homepage": "https://github.com/David-art-beep/Deepresearch-cli#readme",
+  "homepage": "https://github.com/OpenSenseNova/DeepResearch-CLI#readme",
   "bugs": {
-    "url": "https://github.com/David-art-beep/Deepresearch-cli/issues"
+    "url": "https://github.com/OpenSenseNova/DeepResearch-CLI/issues"
   },
   "bin": {
     "deepresearch": "bin/deepresearch.js"

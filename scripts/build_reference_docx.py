@@ -1,4 +1,4 @@
-"""Build the editable Word reference template shipped with DeepResearch CLI."""
+"""Build the editable Word reference template shipped with DeepResearch-CLI."""
 
 from __future__ import annotations
 

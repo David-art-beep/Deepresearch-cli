@@ -1,4 +1,4 @@
-# DeepResearch CLI 诊断指南
+# DeepResearch-CLI 诊断指南
 
 需要定位当前安装所携带的本文件时，执行：
 

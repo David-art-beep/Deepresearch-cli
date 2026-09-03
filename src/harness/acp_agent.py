@@ -700,7 +700,7 @@ class AcpAgentAttemptRuntime(AcpAttemptRuntime):
                     client_capabilities=ClientCapabilities(terminal=False),
                     client_info=Implementation(
                         name="deepresearch-cli",
-                        title="DeepResearch CLI",
+                        title="DeepResearch-CLI",
                         version=__version__,
                     ),
                 ),

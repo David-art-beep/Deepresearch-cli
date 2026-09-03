@@ -382,7 +382,7 @@ def render_report(
     modes = [str(item) for item in config.get("modes", [])]
     aggregate = aggregate_modes(runs, modes)
     lines = [
-        f"# DeepResearch CLI Benchmark：{config.get('suite')}",
+        f"# DeepResearch-CLI Benchmark：{config.get('suite')}",
         "",
         "## 测试摘要",
         "",
