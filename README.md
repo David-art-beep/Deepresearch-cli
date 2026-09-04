@@ -112,7 +112,7 @@ deepresearch "对比主要国际组织对全球经济增长率的预测，并分
 | `--output-format` | `markdown`、`html`、`pdf`、`docx` | 选择最终文件格式 |
 | `--harness` | `hermes`、`codex`、`claude-code`、`openclaw` | 选择实际执行的 Agent |
 
-如果 query 已明确要求报告目录或章节顺序，CLI 会优先遵循用户结构，内置模板只作为补充参考。
+如果 query 已明确要求报告目录或章节顺序，SenseNova-Skills-DeepResearch 会优先遵循用户结构，内置模板只作为补充参考。
 
 最终报告位于 `output/<run-id>/`，运行记录位于 `runs/<run-id>/`。查看或恢复运行：
 
@@ -230,7 +230,7 @@ CLI 会根据研究主题选择相关领域和来源，并行执行搜索，对�
 
 ## Camofox 回退
 
-Camofox 用于处理普通 HTTP 无法读取的公开网页。CLI 会先尝试普通抓取，只有遇到访问拒绝、
+Camofox 用于处理普通 HTTP 无法读取的公开网页。SenseNova-Skills-DeepResearch 会先尝试普通抓取，只有遇到访问拒绝、
 反自动化页面或 JavaScript 空壳时才进行一次浏览器回退。
 
 首次使用前安装并启动：
