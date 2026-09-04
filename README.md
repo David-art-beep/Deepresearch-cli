@@ -121,6 +121,9 @@ deepresearch status <run-id> --json
 deepresearch resume <run-id> --harness hermes
 ```
 
+<details>
+<summary>研究模式详情</summary>
+
 ## 研究模式
 
 | 模式 | 适合场景 | 流程特点 |
@@ -131,6 +134,8 @@ deepresearch resume <run-id> --harness hermes
 
 三种模式均可调整并发数、搜索来源和输出格式。各模式的完整节点说明见
 [使用指南](docs/usage-guide.md)。
+
+</details>
 
 ## Web 进度页面
 
@@ -165,6 +170,9 @@ deepresearch web \
 ```
 
 如果原运行进程已经结束，可使用 `deepresearch resume <run-id> --harness <harness>` 继续。
+
+<details>
+<summary>Agent、搜索与导出配置</summary>
 
 ## 选择 Agent
 
@@ -293,6 +301,8 @@ deepresearch "研究问题" \
 deepresearch node run md-docx --input report=./report.md
 deepresearch node run md-pdf --input report=./report.md
 ```
+
+</details>
 
 ## 开发与验证
 

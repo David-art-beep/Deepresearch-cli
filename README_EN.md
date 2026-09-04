@@ -130,6 +130,9 @@ deepresearch status <run-id> --json
 deepresearch resume <run-id> --harness hermes
 ```
 
+<details>
+<summary>Research mode details</summary>
+
 ## Research modes
 
 | Mode | Best for | Workflow behavior |
@@ -140,6 +143,8 @@ deepresearch resume <run-id> --harness hermes
 
 All modes support configurable concurrency, search sources, report styles, and output formats. See
 the [user guide](docs/usage-guide.md) for the exact nodes.
+
+</details>
 
 ## Web dashboard
 
@@ -176,6 +181,9 @@ deepresearch web \
 
 If the original execution process has stopped, resume it with
 `deepresearch resume <run-id> --harness <harness>`.
+
+<details>
+<summary>Harness, search, and export configuration</summary>
 
 ## Harness setup
 
@@ -308,6 +316,8 @@ Convert an existing Markdown report directly:
 deepresearch node run md-docx --input report=./report.md
 deepresearch node run md-pdf --input report=./report.md
 ```
+
+</details>
 
 ## Development
 
