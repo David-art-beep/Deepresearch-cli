@@ -37,8 +37,8 @@ SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完�
 
 ## 环境要求
 
-- Node.js 22+（包含 npm）
-- Python 3.10+
+- Node.js >=22（包含 npm）
+- Python >=3.10
 - 运行研究前，需安装并配置至少一种 Agent：Hermes、Codex、Claude Code ACP 或 OpenClaw
 - 导出 DOCX 需要 Pandoc；导出 PDF 需要 Typst
 

@@ -44,8 +44,8 @@ Key capabilities:
 
 ## Requirements
 
-- Node.js 22 or newer (with npm);
-- Python 3.10 or newer;
+- Node.js >=22 (with npm);
+- Python >=3.10;
 - at least one configured agent environment to run research: Hermes, Codex, Claude Code ACP, or OpenClaw;
 - Pandoc for DOCX output;
 - Typst for PDF output.
