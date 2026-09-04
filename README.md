@@ -317,7 +317,7 @@ PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
 .venv/bin/python -m build
 ```
 
-仓库仅保留发布所需的核心回归测试；这些测试不会调用真实模型或产生外部服务费用。
+仓库保留核心回归测试；这些测试不会调用真实模型或产生外部服务费用。
 
 ## 更多文档
 
