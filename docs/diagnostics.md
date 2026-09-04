@@ -118,7 +118,9 @@ deepresearch doctor --harness <hermes|codex|claude-code|openclaw> --json
 
 ```bash
 npm install -g @agentclientprotocol/claude-agent-acp
-claude-agent-acp --cli auth login
+deepresearch doctor --harness claude-code --json
+# 仅当 doctor 确认没有可用认证时执行：
+# claude-agent-acp --cli auth login
 ```
 
 CLI 内含 Claude Code 适配代码，但不内置外部 ACP Adapter。

@@ -17,6 +17,12 @@ SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完�
 撰写和检查报告，并可导出 Markdown、HTML、PDF 或 DOCX。整个过程在本地运行，可查看进度、保留记录，
 也能在中断后继续，同时复用用户已有的 Hermes、Codex、Claude Code 或 OpenClaw 模型环境。
 
+### 为什么使用
+
+- 把规划、搜索、证据和写作组织成可恢复的完整流程，而不是一次性聊天回复；
+- 每个结论都保留来源和中间证据，便于复核；
+- 同一套命令可切换不同 Harness，并输出可交付的多种报告格式。
+
 [使用指南](docs/usage-guide.md) ·
 [搜索说明](docs/search-mcp.md)
 
@@ -47,20 +53,18 @@ SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完�
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
-PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
-"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
-"$PYTHON_BIN" -m venv .venv
-.venv/bin/python -m pip install build
-.venv/bin/python scripts/build_npm_package.py
-npm install -g ./dist/*.tgz
+bash scripts/install.sh
 deepresearch --help
 ```
 
 如果安装程序没有找到合适的 Python，可以提前指定：
 
 ```bash
-export DEEPRESEARCH_PYTHON=/path/to/python3.11
+export DEEPRESEARCH_PYTHON=/path/to/python3
 ```
+
+源码更新后，在仓库根目录执行 `bash scripts/update.sh`。脚本只重建并重新安装当前检出的代码，
+不会自动拉取 Git、删除运行记录或改写 `~/.deepresearch-cli/` 配置；工作区有未提交修改时会停止。
 
 ### 从源码构建
 
@@ -183,7 +187,9 @@ Claude Code 需要额外安装 ACP Adapter：
 
 ```bash
 npm install -g @agentclientprotocol/claude-agent-acp
-claude-agent-acp --cli auth login
+deepresearch doctor --harness claude-code --json
+# 仅在 doctor 确认没有可用认证时执行：
+# claude-agent-acp --cli auth login
 ```
 
 OpenClaw 使用其 Gateway 中已经配置的模型，不支持通过单次 DeepResearch 命令临时切换模型。

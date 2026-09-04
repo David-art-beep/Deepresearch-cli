@@ -11,10 +11,12 @@ wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Pytho
 - 安装 Python wheel 依赖时可以访问 Python Package Index；
 - 使用 Hermes、Codex、Claude Code 或 OpenClaw 时，相应 Harness 已安装并配置。
 
-如果 Python 不在标准 PATH 中，可以在安装前指定。源码安装流程如下：
+如果 Python 不在标准 PATH 中，可以在安装前指定。源码仓库根目录优先使用
+`bash scripts/install.sh`；更新已检出的干净工作区使用 `bash scripts/update.sh`。
+手动构建流程如下：
 
 ```bash
-export DEEPRESEARCH_PYTHON=/path/to/python3.11
+export DEEPRESEARCH_PYTHON=/path/to/python3
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
 PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"

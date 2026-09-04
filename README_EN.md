@@ -18,6 +18,12 @@ work, searches multiple source domains concurrently, collects evidence, writes a
 report, and exports Markdown, HTML, PDF, or DOCX. Runs are persisted, visible through terminal and
 Web progress views, and resumable after interruption.
 
+### Why use it
+
+- Turns planning, search, evidence, and writing into a resumable workflow instead of a one-shot chat reply;
+- preserves sources and intermediate evidence so conclusions can be reviewed;
+- uses one command surface across Harnesses and exports delivery-ready report formats.
+
 The CLI works with an existing Hermes, Codex, Claude Code, or OpenClaw model environment through a
 common ACP-based harness interface.
 
@@ -54,12 +60,7 @@ not modify the project directory or the system Python environment.
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
-PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
-"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
-"$PYTHON_BIN" -m venv .venv
-.venv/bin/python -m pip install build
-.venv/bin/python scripts/build_npm_package.py
-npm install -g ./dist/*.tgz
+bash scripts/install.sh
 deepresearch --help
 ```
 
@@ -68,6 +69,9 @@ If Python cannot be discovered automatically, set it before installation:
 ```bash
 export DEEPRESEARCH_PYTHON=/path/to/python3
 ```
+
+After pulling or switching to a clean checkout, run `bash scripts/update.sh` to rebuild and reinstall.
+It does not modify Git history, delete runs or outputs, or rewrite `~/.deepresearch-cli/` configuration.
 
 ### Build from source
 
@@ -193,7 +197,9 @@ Claude Code requires its ACP adapter:
 
 ```bash
 npm install -g @agentclientprotocol/claude-agent-acp
-claude-agent-acp --cli auth login
+deepresearch doctor --harness claude-code --json
+# Only if doctor confirms that no usable authentication is available:
+# claude-agent-acp --cli auth login
 ```
 
 OpenClaw uses the model configured in its Gateway; a single DeepResearch command does not override
