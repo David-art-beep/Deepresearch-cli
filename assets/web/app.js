@@ -195,6 +195,7 @@ function reportView(s) {
   if (!s.result) {
     return `<div class="report-empty">${icon('report')}<h2>最终报告尚未生成</h2><p>完成写作、审核和格式交付后，可在这里下载正式产物。</p></div>`;
   }
+  const preview = s.result.source || (s.output_format === 'markdown' ? s.result : null);
   return `
     <div class="report-delivered">
       <span class="eyebrow">Research delivered</span>
@@ -202,7 +203,71 @@ function reportView(s) {
       <p>最终文件已从当前 Run 的正式产物导出。研究过程与证据统计仍保留在“研究概览”中。</p>
       <div class="download-card"><span class="file-icon">${icon('report')}</span><div><strong>${esc(s.result.filename)}</strong><small>${esc(String(s.output_format || 'markdown').toUpperCase())} 最终产物</small></div><a class="primary-button" href="${esc(s.result.url)}">${icon('download')}下载</a></div>
       ${s.result.source ? `<div class="download-card"><span class="file-icon secondary">${icon('report')}</span><div><strong>${esc(s.result.source.filename)}</strong><small>Markdown 源报告</small></div><a class="secondary-button" href="${esc(s.result.source.url)}">${icon('download')}下载</a></div>` : ''}
+      ${preview ? '<section class="report-preview"><div class="preview-heading"><h3>报告预览</h3><span>Markdown</span></div><div id="report-preview-content" class="markdown-preview"><span class="preview-loading">正在加载报告预览…</span></div></section>' : ''}
     </div>`;
+}
+
+function inlineMarkdown(value) {
+  let rendered = esc(value);
+  rendered = rendered.replace(/`([^`]+)`/g, '<code>$1</code>');
+  rendered = rendered.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, '<img alt="$1" src="$2">');
+  rendered = rendered.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  rendered = rendered.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  rendered = rendered.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  rendered = rendered.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  rendered = rendered.replace(/_([^_]+)_/g, '<em>$1</em>');
+  return rendered;
+}
+
+function markdownPreview(markdown) {
+  const lines = String(markdown || '').replace(/\r\n?/g, '\n').split('\n');
+  const html = [];
+  let paragraph = [];
+  let listType = null;
+  let inCode = false;
+  let code = [];
+  const flushParagraph = () => {
+    if (paragraph.length) html.push(`<p>${inlineMarkdown(paragraph.join(' '))}</p>`);
+    paragraph = [];
+  };
+  const closeList = () => { if (listType) html.push(`</${listType}>`); listType = null; };
+  for (const line of lines) {
+    if (line.trim().startsWith('```')) {
+      if (inCode) { html.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`); code = []; }
+      inCode = !inCode;
+      continue;
+    }
+    if (inCode) { code.push(line); continue; }
+    const heading = line.match(/^(#{1,6})\s+(.+?)\s*#*$/);
+    const unordered = line.match(/^\s*[-*+]\s+(.+)$/);
+    const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+    if (!line.trim()) { flushParagraph(); closeList(); continue; }
+    if (heading) { flushParagraph(); closeList(); const level = heading[1].length; html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`); continue; }
+    if (unordered || ordered) {
+      flushParagraph();
+      const wanted = unordered ? 'ul' : 'ol';
+      if (listType !== wanted) { closeList(); listType = wanted; html.push(`<${listType}>`); }
+      html.push(`<li>${inlineMarkdown((unordered || ordered)[1])}</li>`);
+      continue;
+    }
+    if (line.startsWith('>')) { flushParagraph(); closeList(); html.push(`<blockquote>${inlineMarkdown(line.replace(/^>\s?/, ''))}</blockquote>`); continue; }
+    closeList(); paragraph.push(line.trim());
+  }
+  if (inCode) html.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`);
+  flushParagraph(); closeList();
+  return html.join('');
+}
+
+async function loadReportPreview(url) {
+  const target = document.querySelector('#report-preview-content');
+  if (!target) return;
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error('报告读取失败');
+    target.innerHTML = markdownPreview(await response.text());
+  } catch (error) {
+    target.innerHTML = `<span class="preview-error">${esc(error.message)}</span>`;
+  }
 }
 
 function dashboard(s, connected = false) {
@@ -250,6 +315,8 @@ function dashboard(s, connected = false) {
     activeView = button.dataset.view;
     dashboard(s, connected);
   }));
+  const previewUrl = s.result?.source?.url || (s.output_format === 'markdown' ? s.result?.url : null);
+  if (activeView === 'report' && previewUrl) loadReportPreview(previewUrl);
 }
 
 async function load() {

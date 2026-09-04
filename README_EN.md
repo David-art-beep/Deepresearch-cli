@@ -6,7 +6,7 @@ English · [中文](README.md)
 
 [![CI](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch/actions/workflows/npm-package.yml/badge.svg)](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch/actions/workflows/npm-package.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22-339933.svg)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-3776AB.svg)](https://www.python.org/)
 
 </div>
