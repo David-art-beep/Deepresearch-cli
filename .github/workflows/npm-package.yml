@@ -11,6 +11,10 @@ on:
       - "prompts/**"
       - "assets/**"
       - "search/**"
+      - "tests/**"
+      - "docs/**"
+      - ".github/workflows/**"
+      - "pyproject.toml"
   push:
     branches: [main]
     paths:
@@ -22,6 +26,10 @@ on:
       - "prompts/**"
       - "assets/**"
       - "search/**"
+      - "tests/**"
+      - "docs/**"
+      - ".github/workflows/**"
+      - "pyproject.toml"
   workflow_dispatch:
 
 jobs:

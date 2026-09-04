@@ -20,6 +20,14 @@ from deepresearch_cli.harness import AgentInvocation, HarnessError
 from tests.search_test_utils import write_search_source
 
 
+def _assert_search_mcp_launch(descriptor):
+    """Accept the installed console entry point and source fallback forms."""
+    if descriptor.args:
+        assert descriptor.args == ["-m", "deepresearch_cli.search.mcp_server"]
+    else:
+        assert descriptor.command.endswith("deepresearch-codex-mcp")
+
+
 def test_recording_client_collects_agent_text_and_events():
     async def exercise():
         client = _RecordingAcpClient()
@@ -375,7 +383,7 @@ def test_search_mcp_is_injected_and_verified_only_for_research(tmp_path):
         research_servers = research_connection.sessions[0]["mcp_servers"]
         assert len(research_servers) == 1
         descriptor = research_servers[0]
-        assert descriptor.args == ["-m", "deepresearch_cli.search.mcp_server"]
+        _assert_search_mcp_launch(descriptor)
         environment = {item.name: item.value for item in descriptor.env}
         assert environment["DEEPRESEARCH_SEARCH_STORE_DIR"] == str(
             attempt / "search"
@@ -404,7 +412,7 @@ def test_camofox_fallback_is_injected_into_search_mcp_without_raw_browser_tools(
     try:
         environment = {item.name: item.value for item in descriptor.env}
         assert descriptor.name == server_name
-        assert descriptor.args == ["-m", "deepresearch_cli.search.mcp_server"]
+        _assert_search_mcp_launch(descriptor)
         assert environment["DEEPRESEARCH_CAMOFOX_FALLBACK"] == "1"
         assert environment["DEEPRESEARCH_CAMOFOX_BASE_URL"] == "http://127.0.0.1:9377"
         assert environment["DEEPRESEARCH_FETCH_IDENTITY"] == "inv-test"

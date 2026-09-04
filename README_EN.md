@@ -187,6 +187,8 @@ If the original execution process has stopped, resume it with
 
 ## Harness setup
 
+The project provides adapters for Hermes, Codex, Claude Code ACP, and OpenClaw. The adapters are covered by local unit tests and simulated runs; actual availability depends on the corresponding agent's installation, authentication, model, and permission configuration. Public CI does not sign in to or invoke external agent accounts on a user's behalf.
+
 | Harness | Preparation |
 | --- | --- |
 | `hermes` | Configure or sign in to Hermes |

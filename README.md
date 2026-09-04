@@ -17,7 +17,7 @@ SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完�
 撰写和检查报告，并可导出 Markdown、HTML、PDF 或 DOCX。整个过程在本地运行，可查看进度、保留记录，
 也能在中断后继续，同时复用用户已有的 Hermes、Codex、Claude Code 或 OpenClaw 模型环境。
 
-### 为什么使用
+### 功能介绍
 
 - 把规划、搜索、证据和写作组织成可恢复的完整流程，而不是一次性聊天回复；
 - 每个结论都保留来源和中间证据，便于复核；
@@ -148,7 +148,7 @@ deepresearch web
 访问 <http://127.0.0.1:8765>，即可创建研究任务并查看总体进度、当前阶段、来源数量、章节状态和活动记录。
 页面刷新后仍会读取已保存的进度。
 
-![Web 研究进度页面](assets/web-demo.jpeg)
+![Web 研究进度页面](assets/web-demo.png)
 
 也可以直接启动任务：
 
@@ -175,6 +175,8 @@ deepresearch web \
 <summary>Agent、搜索与导出配置</summary>
 
 ## 选择 Agent
+
+项目提供 Hermes、Codex、Claude Code ACP 和 OpenClaw 四种 Agent 适配器。适配器已通过本地单元测试和模拟运行验证；实际运行是否可用，取决于对应 Agent 在当前环境中的安装、登录、模型和权限配置。
 
 | Harness | 使用前准备 |
 | --- | --- |
