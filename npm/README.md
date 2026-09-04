@@ -17,7 +17,9 @@ wheel；安装时在用户目录创建独立虚拟环境，不修改系统 Pytho
 export DEEPRESEARCH_PYTHON=/path/to/python3.11
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
-python3 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py
 npm install -g ./dist/*.tgz
@@ -64,7 +66,9 @@ deepresearch browser start
 在源码仓库根目录执行：
 
 ```bash
-python3 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py
 ```

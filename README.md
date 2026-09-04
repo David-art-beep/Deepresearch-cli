@@ -1,6 +1,17 @@
+<div align="center">
+
 # SenseNova-Skills-DeepResearch
 
-[English](README_EN.md) | 简体中文
+[English](README_EN.md) · 中文
+
+[![CI](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch/actions/workflows/npm-package.yml/badge.svg)](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch/actions/workflows/npm-package.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933.svg)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.10-3776AB.svg)](https://www.python.org/)
+
+</div>
+
+> 本地运行、证据可追溯的深度研究 CLI。
 
 SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完整流程。它会自动拆解问题、并发搜索、整理证据、
 撰写和检查报告，并可导出 Markdown、HTML、PDF 或 DOCX。整个过程在本地运行，可查看进度、保留记录，
@@ -21,9 +32,9 @@ SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完�
 
 ## 环境要求
 
-- Node.js 22+
+- Node.js 22+（包含 npm）
 - Python 3.10+
-- 已安装并配置至少一种 Agent：Hermes、Codex、Claude Code ACP 或 OpenClaw
+- 运行研究前，需安装并配置至少一种 Agent：Hermes、Codex、Claude Code ACP 或 OpenClaw
 - 导出 DOCX 需要 Pandoc；导出 PDF 需要 Typst
 
 ## 安装
@@ -36,7 +47,9 @@ SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完�
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
-python3 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py
 npm install -g ./dist/*.tgz
@@ -54,7 +67,9 @@ export DEEPRESEARCH_PYTHON=/path/to/python3.11
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
-python3.11 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]' build
 .venv/bin/python scripts/build_npm_package.py
 ```
@@ -275,7 +290,9 @@ deepresearch node run md-pdf --input report=./report.md
 ## 开发与验证
 
 ```bash
-python3 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]" build
 .venv/bin/python -m pytest
 .venv/bin/python -m build

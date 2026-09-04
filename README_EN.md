@@ -1,6 +1,17 @@
+<div align="center">
+
 # SenseNova-Skills-DeepResearch
 
-English | [简体中文](README.md)
+English · [中文](README.md)
+
+[![CI](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch/actions/workflows/npm-package.yml/badge.svg)](https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch/actions/workflows/npm-package.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933.svg)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.10-3776AB.svg)](https://www.python.org/)
+
+</div>
+
+> A local, evidence-traceable deep research CLI.
 
 SenseNova-Skills-DeepResearch turns a research question into a finished, evidence-backed report. It plans the
 work, searches multiple source domains concurrently, collects evidence, writes and validates the
@@ -27,9 +38,9 @@ Key capabilities:
 
 ## Requirements
 
-- Node.js 22 or newer;
+- Node.js 22 or newer (with npm);
 - Python 3.10 or newer;
-- at least one configured agent environment: Hermes, Codex, Claude Code ACP, or OpenClaw;
+- at least one configured agent environment to run research: Hermes, Codex, Claude Code ACP, or OpenClaw;
 - Pandoc for DOCX output;
 - Typst for PDF output.
 
@@ -43,7 +54,9 @@ not modify the project directory or the system Python environment.
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
-python3 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install build
 .venv/bin/python scripts/build_npm_package.py
 npm install -g ./dist/*.tgz
@@ -61,7 +74,9 @@ export DEEPRESEARCH_PYTHON=/path/to/python3
 ```bash
 git clone https://github.com/OpenSenseNova/SenseNova-Skills-DeepResearch.git
 cd SenseNova-Skills-DeepResearch
-python3 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]' build
 .venv/bin/python scripts/build_npm_package.py
 ```
@@ -289,7 +304,9 @@ deepresearch node run md-pdf --input report=./report.md
 ## Development
 
 ```bash
-python3 -m venv .venv
+PYTHON_BIN="${DEEPRESEARCH_PYTHON:-python3}"
+"$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 10), "Python >=3.10 required"'
+"$PYTHON_BIN" -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]" build
 .venv/bin/python -m pytest
 .venv/bin/python -m build

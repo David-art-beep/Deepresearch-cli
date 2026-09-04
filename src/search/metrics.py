@@ -157,6 +157,8 @@ def build_search_metrics(
     if not database.is_file() or database.is_symlink():
         value = empty_search_metrics(evidence_count=len(evidence))
         value["funnel"]["fetched"] = fetched
+        fetched = max(fetched, len(evidence))
+        value["funnel"]["fetched"] = fetched
         value["funnel"]["rates"]["evidence"] = _rate(len(evidence), fetched)
         value["version"] = f"0:{fetched_version}:{len(evidence)}"
         return value
@@ -214,6 +216,8 @@ def build_search_metrics(
     except (OSError, sqlite3.Error):
         value = empty_search_metrics(evidence_count=len(evidence))
         value["funnel"]["fetched"] = fetched
+        fetched = max(fetched, len(evidence))
+        value["funnel"]["fetched"] = fetched
         value["funnel"]["rates"]["evidence"] = _rate(len(evidence), fetched)
         value["version"] = f"0:{fetched_version}:{len(evidence)}"
         return value
@@ -225,6 +229,10 @@ def build_search_metrics(
     if fetch_stats["attempts"]:
         fetched = explicit_fetched
         fetched_version = max(fetched_version, int(events[-1]["id"]) if events else 0)
+    # Evidence sources are completed reads even when a native Harness or
+    # cache path did not emit explicit fetch telemetry. Include them in the
+    # fetched stage so the funnel remains monotonic.
+    fetched = max(fetched, len(evidence))
 
     sources: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
