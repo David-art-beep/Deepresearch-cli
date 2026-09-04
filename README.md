@@ -33,7 +33,6 @@ SenseNova-Skills-DeepResearch 用来完成从研究问题到成品报告的完�
 - 简报和正式报告两种写作形式；
 - Markdown、HTML、PDF、DOCX 四种交付格式；
 - 终端进度和本地 Web 控制台；
-- 运行中断后继续执行；
 - 普通抓取失败时按需使用 Camofox。
 
 ## 环境要求
@@ -143,6 +142,8 @@ deepresearch web
 
 访问 <http://127.0.0.1:8765>，即可创建研究任务并查看总体进度、当前阶段、来源数量、章节状态和活动记录。
 页面刷新后仍会读取已保存的进度。
+
+![Web 研究进度页面](assets/web-demo.jpeg)
 
 也可以直接启动任务：
 

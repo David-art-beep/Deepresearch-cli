@@ -152,6 +152,8 @@ deepresearch web
 Open <http://127.0.0.1:8765> to create runs and view workflow progress, active stages, source counts,
 writing status, and activity. The page rebuilds its state from persisted run data after refresh.
 
+![Web research progress dashboard](assets/web-demo.jpeg)
+
 Start the dashboard and a research run together:
 
 ```bash
